@@ -1,0 +1,10 @@
+plugins {
+    id "java"
+    id "idea"
+    id "com.github.johnrengelman.shadow" version "1.2.4"
+}
+
+subprojects {
+    apply from: rootProject.file('common.gradle')
+    apply from: rootProject.file('commonJava.gradle')
+}
