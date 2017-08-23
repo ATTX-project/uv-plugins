@@ -66,12 +66,15 @@ public class ActiveMQClient implements MessagingClient {
     }
     
     @Override
-    public void sendSyncServiceMessage(String content, String targetQueue, int timeout) throws Exception {
+    public String sendSyncServiceMessage(String content, String targetQueue, int timeout) throws Exception {
         Message request = createMessage(content, true);
         this.producer.send(session.createQueue(targetQueue), request);
         Message response = tempQueueConsumer.receive(timeout);
         if(response == null) {
             throw new Exception("No response received within timeout!");
+        }
+        else {
+            return ((TextMessage) response).getText();
         }
     }
     

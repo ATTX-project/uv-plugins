@@ -12,6 +12,6 @@ package org.uh.hulib.attx.wc.uv.common;
 public interface MessagingClient {
     
     public void sendProvMessage(String content) throws Exception;
-    public void sendSyncServiceMessage(String content, String targetQueue, int timeout) throws Exception;
+    public String sendSyncServiceMessage(String content, String targetQueue, int timeout) throws Exception;
     
 }
