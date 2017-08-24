@@ -22,8 +22,6 @@ import org.apache.activemq.ActiveMQConnectionFactory;
  */
 public class ActiveMQClient implements MessagingClient {
 
-    private static final String BROKER_URL = "tcp://localhost:61616";
-    private static final String PROV_QUEUE = "provenance.inbox";
     
     private static final int ACK_MODE = Session.AUTO_ACKNOWLEDGE;
     private static final boolean TRANSACTED = false;
@@ -38,15 +36,15 @@ public class ActiveMQClient implements MessagingClient {
     private Destination tempQueue;    
     private Destination provQueue;
     
-    public ActiveMQClient() throws Exception {
-        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(BROKER_URL);        
+    public ActiveMQClient(String brokerURL, String provQueueName) throws Exception {
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerURL);        
         connection = connectionFactory.createConnection();
         connection.start();
         session = connection.createSession(TRANSACTED, ACK_MODE);       
 
         producer = session.createProducer(null);
         tempQueue = session.createTemporaryQueue();
-        provQueue = session.createQueue(PROV_QUEUE);        
+        provQueue = session.createQueue(provQueueName);        
         tempQueueConsumer = session.createConsumer(tempQueue);        
     }
     

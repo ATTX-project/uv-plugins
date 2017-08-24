@@ -15,5 +15,5 @@ if (!hasProperty('mainClass')) {
 
 dependencies {
     compile group: 'org.apache.activemq', name: 'activemq-client', version: '5.15.0'
-    
+
 }
