@@ -21,7 +21,7 @@ public class Context {
     @JsonProperty("workflowID")
     private String workflowID;
     @JsonProperty("activityID")
-    private Integer activityID;
+    private String activityID;
     @JsonProperty("stepID")
     private String stepID;
     @JsonIgnore
@@ -38,12 +38,12 @@ public class Context {
     }
 
     @JsonProperty("activityID")
-    public Integer getActivityID() {
+    public String getActivityID() {
         return activityID;
     }
 
     @JsonProperty("activityID")
-    public void setActivityID(Integer activityID) {
+    public void setActivityID(String activityID) {
         this.activityID = activityID;
     }
 
