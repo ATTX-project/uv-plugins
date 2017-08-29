@@ -67,11 +67,11 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
 
     private static final Logger log = LoggerFactory.getLogger(ReplaceDS.class);
 
-    @DataUnit.AsInput(name = "datasetMetadata", optional = false)
-    public RDFDataUnit datasetMetadata;
+    @DataUnit.AsInput(name = "outputDatasetMetadata", optional = false)
+    public RDFDataUnit outputDatasetMetadata;
 
-    @DataUnit.AsInput(name = "externalDatasetMetadata", optional = true)
-    public RDFDataUnit externalDatasetMetadata;
+    @DataUnit.AsInput(name = "inputDatasetMetadata", optional = true)
+    public RDFDataUnit inputDatasetMetadata;
 
     @DataUnit.AsInput(name = "dataURI", optional = true)
     public RDFDataUnit dataURIs;
@@ -84,8 +84,11 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
     }
 
     private Provenance createDatasetProv() throws Exception {
-        // dataset metadata is required 
-        RepositoryConnection c = datasetMetadata.getConnection();
+        // outputDatasetMetadata is required 
+        long stepID = ctx.getExecMasterContext().getDpuContext().getDpuInstanceId();
+        long workflowID = ctx.getExecMasterContext().getDpuContext().getPipelineId();
+        RepositoryConnection c = outputDatasetMetadata.getConnection();
+        
 
         Map<String, Object> payload = new HashMap<String, Object>();
 
@@ -100,17 +103,24 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
         provAct.setType("DescribeStepExecution");
         prov.setActivity(provAct);
 
-        URI[] datasetMetadataGraphs = RDFHelper.getGraphsURIArray(datasetMetadata);
+        URI[] datasetMetadataGraphs = RDFHelper.getGraphsURIArray(outputDatasetMetadata);
+        
+        
         if (datasetMetadataGraphs.length > 0) {
             // just using the first one for now!
             URI g = datasetMetadataGraphs[0];
-            String targetGraph = getSinglePropertyValue(c, g, DC.IDENTIFIER);
+            
+            writeGraph(c, g, System.out);
+            
+            String targetGraph = "http://data.hulib.helsinki.fi/attx/work/wf_" + workflowID + "_step_" + stepID + "/input"; 
             String targetGraphTitle = getSinglePropertyValue(c, g, DC.TITLE);
             String targetGraphDesc = getSinglePropertyValue(c, g, DC.DESCRIPTION);
 
             DataProperty output = new DataProperty();
             output.setKey("outputDataset");
             output.setRole("Dataset");
+            prov.setOutput(new ArrayList<DataProperty>());
+            prov.getOutput().add(output);
 
             Map<String, Object> outputDataset = new HashMap<String, Object>();
             outputDataset.put("uri", targetGraph);
@@ -120,11 +130,15 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             payload.put("outputDataset", outputDataset);
         }
 
-        URI[] externalDatasetMetadataGraphs = RDFHelper.getGraphsURIArray(externalDatasetMetadata);
+        URI[] externalDatasetMetadataGraphs = RDFHelper.getGraphsURIArray(inputDatasetMetadata);
         if (externalDatasetMetadataGraphs.length > 0) {
             // just using the first one for now!
-            URI g = datasetMetadataGraphs[0];
-            String sourceGraph = getSinglePropertyValue(c, g, DC.IDENTIFIER);
+            URI g = externalDatasetMetadataGraphs[0];
+            
+            writeGraph(c, g, System.out);
+            
+            
+            String sourceGraph = "http://data.hulib.helsinki.fi/attx/work/wf_" + workflowID + "_step_" + stepID + "/output"; 
             String sourceGraphTitle = getSinglePropertyValue(c, g, DC.TITLE);
             String sourceGraphDesc = getSinglePropertyValue(c, g, DC.DESCRIPTION);
             String sourceGraphPublisher = getSinglePropertyValue(c, g, DC.PUBLISHER);
@@ -133,17 +147,25 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             DataProperty input = new DataProperty();
             input.setKey("inputDataset");
             input.setRole("Dataset");
+            prov.setInput(new ArrayList<DataProperty>());
+            prov.getInput().add(input);
 
+            
             Map<String, Object> inputDataset = new HashMap<String, Object>();
             inputDataset.put("uri", sourceGraph);
-            inputDataset.put("title", sourceGraphTitle);
-            inputDataset.put("description", sourceGraphDesc);
-            inputDataset.put("publisher", sourceGraphPublisher);
-            inputDataset.put("license", sourceGraphLicense);
+            if(sourceGraphTitle != null)
+                inputDataset.put("title", sourceGraphTitle);
+            if(sourceGraphDesc != null)
+                inputDataset.put("description", sourceGraphDesc);
+            if(sourceGraphPublisher != null)
+                inputDataset.put("publisher", sourceGraphPublisher);
+            if(sourceGraphLicense != null)
+                inputDataset.put("license", sourceGraphLicense);
 
             payload.put("inputDataset", inputDataset);
 
         }
+        // check for existing datasets         
         prov.setAdditionalProperty("payload", payload);
 
         return prov;
@@ -162,11 +184,11 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             
             try {
 
-                RepositoryConnection c = datasetMetadata.getConnection();
+                RepositoryConnection c = outputDatasetMetadata.getConnection();
 
                 // create dataset related prov content
                 Provenance datasetProv = createDatasetProv();
-
+                System.out.println("Generated dataset prov");
                 Map<String, Object> payload = (Map<String, Object>) datasetProv.getAdditionalProperties().get("payload");
                 String outputDatasetURI = ((Map<String, Object>) payload.get("outputDataset")).get("uri").toString();
 
@@ -198,6 +220,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                     mq.sendProvMessage(mapper.writeValueAsString(stepProv));
                     mq.sendProvMessage(mapper.writeValueAsString(datasetProv));
 
+                    
                 } else if (fileEntries.size() > 0) {
                     throw new Exception("File inputs are not implemented yet!");
                 }
