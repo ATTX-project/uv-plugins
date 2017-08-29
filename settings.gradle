@@ -1,1 +1,1 @@
-include "uv-common", "attx-t-rmlservice"
+include "uv-common", "attx-t-rmlservice", "attx-l-replaceds", "attx-t-describeds", "attx-t-describeexternalds"
