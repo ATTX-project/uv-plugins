@@ -24,6 +24,11 @@
             <name>attx-releases</name>
             <url>http://attx-dev:8081/repository/attx-releases</url>
         </repository>        
+        <repository>
+            <id>attx-releases-jenkins</id>
+            <name>attx-releases-jenkins</name>
+            <url>http://archiva:8080/repository/attx-releases</url>
+        </repository>                
     </repositories>
     <properties>
         <dpu.package>org.uh.hulib.attx.wc.uv.t.rmlservice</dpu.package>
