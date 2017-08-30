@@ -1,2 +1,2 @@
 #!/bin/bash
-mvn clean package -U
+mvn clean package
