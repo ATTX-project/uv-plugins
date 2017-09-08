@@ -26,10 +26,13 @@ public class RabbitMQClient implements MessagingClient {
     private Channel channel = null;
     private String replyQueueName;
     
-    public RabbitMQClient(String brokerURL, String provQueueName) throws Exception {
+    public RabbitMQClient(String brokerURL, String username, String password, String provQueueName) throws Exception {
         ConnectionFactory connectionFactory = new ConnectionFactory();
         connectionFactory.setHost(brokerURL);
+        connectionFactory.setUsername(username);
+        connectionFactory.setPassword(password);
         connection = connectionFactory.newConnection();
+        
         channel = connection.createChannel();
         replyQueueName = channel.queueDeclare().getQueue();
     }    
