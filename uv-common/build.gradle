@@ -16,9 +16,12 @@ if (!hasProperty('mainClass')) {
 dependencies {
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.9.0'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.9.0'
+    compile "com.fasterxml.jackson.core:jackson-databind:2.9.0"
+
     compile group: 'org.apache.activemq', name: 'activemq-client', version: '5.15.0'
     compile group: 'com.rabbitmq', name: 'amqp-client', version: '4.2.0'
 
-    
+    compile group: 'commons-io', name: 'commons-io', version: '2.5'
+
     
 }

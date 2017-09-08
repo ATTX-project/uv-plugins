@@ -12,9 +12,12 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -31,9 +34,11 @@ public class RabbitMQClient implements MessagingClient {
         connectionFactory.setHost(brokerURL);
         connectionFactory.setUsername(username);
         connectionFactory.setPassword(password);
+        
         connection = connectionFactory.newConnection();
         
         channel = connection.createChannel();
+        
         replyQueueName = channel.queueDeclare().getQueue();
     }    
     
@@ -45,6 +50,7 @@ public class RabbitMQClient implements MessagingClient {
     @Override
     public String sendSyncServiceMessage(String content, String targetQueue, int timeout) throws Exception {
         String corrId = UUID.randomUUID().toString();
+        System.out.println("correationID: " + corrId);
         AMQP.BasicProperties props = new AMQP.BasicProperties
                 .Builder()
                 .correlationId(corrId)
@@ -57,13 +63,13 @@ public class RabbitMQClient implements MessagingClient {
         channel.basicConsume(replyQueueName, true, new DefaultConsumer(channel) {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-                if (properties.getCorrelationId().equals(corrId)) {
+//                if (properties.getCorrelationId().equals(corrId)) {
                     response.offer(new String(body, "UTF-8"));
-                }
+//                }
             }
         });
 
-        return response.take();        
+        return response.poll(timeout, TimeUnit.MILLISECONDS);        
     }
     
     public void close() throws IOException {
