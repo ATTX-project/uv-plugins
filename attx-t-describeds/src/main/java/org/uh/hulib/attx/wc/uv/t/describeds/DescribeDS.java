@@ -13,14 +13,11 @@ import org.slf4j.LoggerFactory;
 import eu.unifiedviews.helpers.dpu.config.ConfigHistory;
 import eu.unifiedviews.helpers.dpu.context.ContextUtils;
 import eu.unifiedviews.helpers.dpu.exec.AbstractDpu;
-import eu.unifiedviews.helpers.dpu.exec.UserExecContext;
 import eu.unifiedviews.helpers.dpu.extension.ExtensionInitializer;
-import eu.unifiedviews.helpers.dpu.extension.faulttolerance.FaultTolerance;
 import eu.unifiedviews.helpers.dpu.extension.rdf.simple.WritableSimpleRdf;
 import eu.unifiedviews.helpers.dpu.rdf.EntityBuilder;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.vocabulary.DC;
-import org.openrdf.model.vocabulary.RDF;
 
 /**
  * Main data processing unit class.
