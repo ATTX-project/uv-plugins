@@ -32,8 +32,8 @@ import java.util.ArrayList;
 import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.openrdf.model.ValueFactory;
-import org.uh.hulib.attx.wc.uv.common.ActiveMQClient;
 import org.uh.hulib.attx.wc.uv.common.MessagingClient;
+import org.uh.hulib.attx.wc.uv.common.RabbitMQClient;
 import org.uh.hulib.attx.wc.uv.common.pojos.RMLServiceRequest;
 import org.uh.hulib.attx.wc.uv.common.pojos.RMLServiceResponse;
 import org.uh.hulib.attx.wc.uv.common.pojos.prov.Activity;
@@ -80,7 +80,7 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                 System.out.println("- RML conf:");
                 System.out.println(config.getConfiguration());
 
-                MessagingClient mq = new ActiveMQClient("tcp://mom:61616", "provenance.inbox");
+                MessagingClient mq = new RabbitMQClient("messagebroker", System.getenv("RABBITMQ_DEFAULT_USER"), System.getenv("RABBITMQ_DEFAULT_PASS"), "provenance.inbox");
                 ObjectMapper mapper = new ObjectMapper();
                 Provenance prov = getProv();                
 
@@ -88,7 +88,11 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                     RMLServiceRequest request = new RMLServiceRequest();
                     request.setMapping(config.getConfiguration());
                     request.setSourceData(FileUtils.readFileToString(new File(new URI(fileEntries.iterator().next().getFileURIString())), "UTF-8"));
-                    RMLServiceResponse response = mapper.readValue(mq.sendSyncServiceMessage(mapper.writeValueAsString(request), "attx.RMLService", 10000), RMLServiceResponse.class);
+                    String responseText = mq.sendSyncServiceMessage(mapper.writeValueAsString(request), "attx.RMLService", 10000);
+                    if(responseText == null) {
+                        throw new Exception("No response from service!");
+                    }
+                    RMLServiceResponse response = mapper.readValue(responseText, RMLServiceResponse.class);
                     System.out.println(response.getTransformedDatasetURL());
                     prov.getActivity().setStatus("SUCCESS");
                     mq.sendProvMessage(mapper.writeValueAsString(prov));
