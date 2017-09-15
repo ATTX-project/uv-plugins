@@ -28,6 +28,7 @@ public class RabbitMQClient implements MessagingClient {
     private Connection connection = null;
     private Channel channel = null;
     private String replyQueueName;
+    private String provQueueName;
     
     public RabbitMQClient(String brokerURL, String username, String password, String provQueueName) throws Exception {
         ConnectionFactory connectionFactory = new ConnectionFactory();
@@ -39,12 +40,17 @@ public class RabbitMQClient implements MessagingClient {
         
         channel = connection.createChannel();
         
-        replyQueueName = channel.queueDeclare().getQueue();
+        this.replyQueueName = channel.queueDeclare().getQueue();
+        this.provQueueName = provQueueName;
+        
     }    
     
     @Override
     public void sendProvMessage(String content) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        AMQP.BasicProperties props = new AMQP.BasicProperties
+                .Builder()
+                .build();
+        channel.basicPublish("", provQueueName , props, content.getBytes("UTF-8"));
     }
 
     @Override
