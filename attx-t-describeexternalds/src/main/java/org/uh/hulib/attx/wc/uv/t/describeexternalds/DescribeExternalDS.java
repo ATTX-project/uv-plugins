@@ -4,7 +4,6 @@ import eu.unifiedviews.dataunit.DataUnit;
 import eu.unifiedviews.dataunit.rdf.RDFDataUnit;
 import eu.unifiedviews.dataunit.rdf.WritableRDFDataUnit;
 import eu.unifiedviews.dpu.DPU;
-import eu.unifiedviews.dpu.DPUContext;
 import eu.unifiedviews.dpu.DPUException;
 import eu.unifiedviews.helpers.dataunit.DataUnitUtils;
 import eu.unifiedviews.helpers.dataunit.rdf.RdfDataUnitUtils;
@@ -15,14 +14,10 @@ import eu.unifiedviews.helpers.dpu.config.ConfigHistory;
 import eu.unifiedviews.helpers.dpu.context.ContextUtils;
 import eu.unifiedviews.helpers.dpu.exec.AbstractDpu;
 import eu.unifiedviews.helpers.dpu.extension.ExtensionInitializer;
-import eu.unifiedviews.helpers.dpu.extension.faulttolerance.FaultTolerance;
 import eu.unifiedviews.helpers.dpu.extension.rdf.simple.WritableSimpleRdf;
 import eu.unifiedviews.helpers.dpu.rdf.EntityBuilder;
-import java.util.ArrayList;
-import java.util.List;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.vocabulary.DC;
-import org.openrdf.model.vocabulary.RDF;
 
 /**
  * Main data processing unit class.
