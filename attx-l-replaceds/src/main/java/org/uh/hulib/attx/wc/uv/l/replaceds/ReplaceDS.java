@@ -10,44 +10,32 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.unifiedviews.dataunit.DataUnit;
 import eu.unifiedviews.dataunit.files.FilesDataUnit;
 import eu.unifiedviews.dataunit.rdf.RDFDataUnit;
-import eu.unifiedviews.dataunit.rdf.WritableRDFDataUnit;
 import eu.unifiedviews.dpu.DPU;
 import eu.unifiedviews.dpu.DPUException;
-import eu.unifiedviews.helpers.dataunit.DataUnitUtils;
 import eu.unifiedviews.helpers.dataunit.files.FilesHelper;
 import eu.unifiedviews.helpers.dataunit.rdf.RDFHelper;
-import eu.unifiedviews.helpers.dataunit.rdf.RdfDataUnitUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.unifiedviews.helpers.dpu.config.ConfigHistory;
 import eu.unifiedviews.helpers.dpu.context.ContextUtils;
 import eu.unifiedviews.helpers.dpu.exec.AbstractDpu;
-import eu.unifiedviews.helpers.dpu.extension.ExtensionInitializer;
-
-import eu.unifiedviews.helpers.dpu.extension.rdf.simple.WritableSimpleRdf;
-import eu.unifiedviews.helpers.dpu.rdf.EntityBuilder;
-import java.io.File;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.commons.io.FileUtils;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
-import org.openrdf.model.ValueFactory;
 import org.openrdf.model.vocabulary.DC;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryResult;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFWriter;
 import org.openrdf.rio.Rio;
-import org.uh.hulib.attx.wc.uv.common.ActiveMQClient;
 import org.uh.hulib.attx.wc.uv.common.MessagingClient;
-import org.uh.hulib.attx.wc.uv.common.pojos.RMLServiceRequest;
-import org.uh.hulib.attx.wc.uv.common.pojos.RMLServiceResponse;
+import org.uh.hulib.attx.wc.uv.common.RabbitMQClient;
 import org.uh.hulib.attx.wc.uv.common.pojos.ReplaceDSRequest;
 import org.uh.hulib.attx.wc.uv.common.pojos.ReplaceDSResponse;
 import org.uh.hulib.attx.wc.uv.common.pojos.prov.Activity;
@@ -178,7 +166,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
         ContextUtils.sendShortInfo(ctx, "ReplaceDS.message");
 
         try {
-            MessagingClient mq = new ActiveMQClient("tcp://mom:61616", "provenance.inbox");
+            MessagingClient mq = new RabbitMQClient("messagebroker", System.getenv("RABBITMQ_DEFAULT_USER"), System.getenv("RABBITMQ_DEFAULT_PASS"), "provenance.inbox");
             ObjectMapper mapper = new ObjectMapper();
             Provenance stepProv = getProv();
             
