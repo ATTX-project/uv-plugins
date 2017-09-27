@@ -45,7 +45,8 @@ public class RMLServiceVaadinDialog extends AbstractDialog<RMLServiceConfig_V1> 
         mainLayout.setHeight("-1px");
         mainLayout.setMargin(true);
 
-        final TextArea config = new TextArea("RML configuration");
+        final TextArea config = new TextArea(this.configuration);
+        config.setCaption("RML configuration");
         config.setRows(40);
         config.setWidth("100%");
         mainLayout.addComponent(config);
