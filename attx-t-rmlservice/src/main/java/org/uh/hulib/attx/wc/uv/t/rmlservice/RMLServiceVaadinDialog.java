@@ -5,6 +5,7 @@
  */
 package org.uh.hulib.attx.wc.uv.t.rmlservice;
 
+import com.vaadin.data.util.ObjectProperty;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.VerticalLayout;
@@ -19,19 +20,21 @@ import eu.unifiedviews.helpers.dpu.vaadin.dialog.AbstractDialog;
  */
 public class RMLServiceVaadinDialog extends AbstractDialog<RMLServiceConfig_V1> {
 
+    private ObjectProperty<String> configuration = new ObjectProperty<String>("");
+
     public RMLServiceVaadinDialog() {
         super(RMLService.class);
     }
 
     @Override
     public void setConfiguration(RMLServiceConfig_V1 c) throws DPUConfigException {
-
+        this.configuration.setValue(c.getConfiguration());
     }
 
     @Override
     public RMLServiceConfig_V1 getConfiguration() throws DPUConfigException {
         final RMLServiceConfig_V1 c = new RMLServiceConfig_V1();
-
+        c.setConfiguration(this.configuration.getValue());
         return c;
     }
 
