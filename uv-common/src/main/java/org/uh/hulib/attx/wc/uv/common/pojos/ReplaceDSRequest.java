@@ -17,46 +17,47 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "sourceURIs",
-    "targetURI"
-})
-public class ReplaceDSRequest {
 
-    private List<String> sourceURIs = null;
-    @JsonProperty("targetURI")
-    private String targetURI;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+public class ReplaceDSRequest extends AbstractMessage {
 
-    @JsonProperty("sourceURIs")
-    public List<String> getSourceURIs() {
-        return sourceURIs;
+    @JsonProperty("payload")
+    private ReplaceDSRequestPayload payload;
+    
+    @JsonProperty("payload")
+    public ReplaceDSRequestPayload getPayload() {
+        return this.payload;
     }
 
-    @JsonProperty("sourceURIs")
-    public void setSourceURIs(List<String> sourceURIs) {
-        this.sourceURIs = sourceURIs;
+    @JsonProperty("payload")
+    public void setPayload(ReplaceDSRequestPayload payload) {
+        this.payload = payload;
+    }    
+    
+    
+    public class ReplaceDSRequestPayload {
+
+        public ReplaceDSRequestPayload() {
+        }
+
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @JsonPropertyOrder({
+            "graphManagerInput"
+        })
+
+        @JsonProperty("graphManagerInput")
+        private GraphManagerInput graphManagerInput;
+
+        @JsonProperty("graphManagerInput")
+        public GraphManagerInput getGraphManagerInput() {
+            return graphManagerInput;
+        }
+
+        @JsonProperty("graphManagerInput")
+        public void setGraphManagerInput(GraphManagerInput graphManagerInput) {
+            this.graphManagerInput = graphManagerInput;
+        }
     }
 
-    @JsonProperty("targetURI")
-    public String getTargetURI() {
-        return targetURI;
-    }
-
-    @JsonProperty("targetURI")
-    public void setTargetURI(String targetURI) {
-        this.targetURI = targetURI;
-    }
-
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
+    
 
 }

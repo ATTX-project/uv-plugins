@@ -13,36 +13,49 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.HashMap;
 import java.util.Map;
+import org.uh.hulib.attx.wc.uv.common.pojos.prov.Provenance;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "status"
-})
-public class ReplaceDSResponse {
+public class ReplaceDSResponse extends AbstractMessage {
 
-    @JsonProperty("status")
-    private String status;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    @JsonProperty("payload")
+    private ReplaceDSResponsePayload payload;
 
-    @JsonProperty("status")
-    public String getStatus() {
-        return status;
+    @JsonProperty("payload")
+    public ReplaceDSResponsePayload getPayload() {
+        return payload;
     }
 
-    @JsonProperty("status")
-    public void setStatus(String status) {
-        this.status = status;
+    @JsonProperty("payload")
+    public void setPayload(ReplaceDSResponsePayload payload) {
+        this.payload = payload;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
+
+    public class ReplaceDSResponsePayload {
+
+        public ReplaceDSResponsePayload() {
+
+        }
+
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @JsonPropertyOrder({
+            "graphManagerOutput"
+        })
+
+        @JsonProperty("graphManagerOutput")
+        private GraphManagerOutput graphManagerOutput;
+
+        @JsonProperty("graphManagerOutput")
+        public GraphManagerOutput getGraphManagerOutput() {
+            return graphManagerOutput;
+        }
+
+        @JsonProperty("graphManagerOutput")
+        public void setGraphManagerOutput(GraphManagerOutput graphManagerOutput) {
+            this.graphManagerOutput = graphManagerOutput;
+        }
     }
 
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 
 }
