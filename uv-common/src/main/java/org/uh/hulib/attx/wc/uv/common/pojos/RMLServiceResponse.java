@@ -17,15 +17,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class RMLServiceResponse extends AbstractMessage {
 
      @JsonProperty("payload")
-    private RMLServiceInput payload;
+    private RMLServiceOutput payload;
 
     @JsonProperty("payload")
-    public RMLServiceInput getPayload() {
+    public RMLServiceOutput getPayload() {
         return this.payload;
     }
 
     @JsonProperty("payload")
-    public void setPayload(RMLServiceInput payload) {
+    public void setPayload(RMLServiceOutput payload) {
         this.payload = payload;
     }
 
