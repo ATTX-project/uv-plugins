@@ -34,6 +34,8 @@ import org.apache.commons.io.FileUtils;
 import org.openrdf.model.ValueFactory;
 import org.uh.hulib.attx.wc.uv.common.MessagingClient;
 import org.uh.hulib.attx.wc.uv.common.RabbitMQClient;
+import org.uh.hulib.attx.wc.uv.common.pojos.ProvenanceMessage;
+import org.uh.hulib.attx.wc.uv.common.pojos.RMLServiceInput;
 import org.uh.hulib.attx.wc.uv.common.pojos.RMLServiceRequest;
 import org.uh.hulib.attx.wc.uv.common.pojos.RMLServiceResponse;
 import org.uh.hulib.attx.wc.uv.common.pojos.prov.Activity;
@@ -54,6 +56,11 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
     public static final String datasetURISymbolicName = "datasetURI";
 
     private static final Logger log = LoggerFactory.getLogger(RMLService.class);
+    
+    
+    private long workflowID;
+    private long executionID;
+    private long stepID;    
 
     @DataUnit.AsInput(name = "fileInput", optional = true)
     public FilesDataUnit filesInput;
@@ -64,14 +71,27 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
     @ExtensionInitializer.Init(param = "datasetURI")
     public WritableSimpleRdf rdfData;
 
-    public RMLService() {
+    public RMLService() {        
         super(RMLServiceVaadinDialog.class, ConfigHistory.noHistory(RMLServiceConfig_V1.class));
     }
+    
+    private Context getProvenanceContext() throws Exception {
+        Context ctx = new Context();
+        ctx.setActivityID("" +executionID);
+        ctx.setStepID("" + stepID);
+        ctx.setWorkflowID("" + workflowID);
+                
+        return ctx;
+    }    
 
     @Override
     protected void innerExecute() throws DPUException {
 
         ContextUtils.sendShortInfo(ctx, "RMLService.message");
+        this.stepID = ctx.getExecMasterContext().getDpuContext().getDpuInstanceId();
+        this.workflowID = ctx.getExecMasterContext().getDpuContext().getPipelineId();
+        this.executionID = ctx.getExecMasterContext().getDpuContext().getPipelineExecutionId();
+        
         try {
             Set<FilesDataUnit.Entry> fileEntries = FilesHelper.getFiles(filesInput);
             if (fileEntries.size() > 0) {
@@ -86,16 +106,24 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
 
                 try {
                     RMLServiceRequest request = new RMLServiceRequest();
-                    request.setMapping(config.getConfiguration());
-                    request.setSourceData(FileUtils.readFileToString(new File(new URI(fileEntries.iterator().next().getFileURIString())), "UTF-8"));
+                    Provenance requestProv = new Provenance();
+                    requestProv.setContext(getProvenanceContext());
+                    request.setProvenance(requestProv);
+                    RMLServiceInput requestInput = new RMLServiceInput();
+                    requestInput.setMapping(config.getConfiguration());
+                    requestInput.setSourceData(FileUtils.readFileToString(new File(new URI(fileEntries.iterator().next().getFileURIString())), "UTF-8"));
+                    request.setPayload(requestInput);
                     String responseText = mq.sendSyncServiceMessage(mapper.writeValueAsString(request), "attx.RMLService", 10000);
                     if(responseText == null) {
                         throw new Exception("No response from service!");
                     }
                     RMLServiceResponse response = mapper.readValue(responseText, RMLServiceResponse.class);
-                    System.out.println(response.getTransformedDatasetURL());
+                    System.out.println(response.getPayload().getTransformedDatasetURL());
                     prov.getActivity().setStatus("SUCCESS");
-                    mq.sendProvMessage(mapper.writeValueAsString(prov));
+                    
+                    ProvenanceMessage provMsg = new ProvenanceMessage();
+                    provMsg.setProvenance(prov);
+                    mq.sendProvMessage(mapper.writeValueAsString(provMsg));
 
                     final ValueFactory vf = rdfData.getValueFactory();
                     // entry is the graph 
@@ -104,7 +132,7 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                             DataUnitUtils.generateSymbolicName(RMLService.class));
 
                     final EntityBuilder datasetUriEntity = new EntityBuilder(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/RMLService"), vf);
-                    datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"), vf.createURI(response.getTransformedDatasetURL()));
+                    datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"), vf.createURI(response.getPayload().getTransformedDatasetURL()));
 
                     rdfData.setOutput(entry);
                     rdfData.add(datasetUriEntity.asStatements());
@@ -123,16 +151,10 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
         }
     }
 
-    private Provenance getProv() {
-        long stepID = ctx.getExecMasterContext().getDpuContext().getDpuInstanceId();
-        long workflowID = ctx.getExecMasterContext().getDpuContext().getPipelineId();
-        long activityID = ctx.getExecMasterContext().getDpuContext().getPipelineExecutionId();
+    private Provenance getProv() throws Exception {
 
         Provenance provContent = new Provenance();
-        Context provContext = new Context();
-        provContext.setActivityID(activityID + "");
-        provContext.setWorkflowID(workflowID + "");
-        provContext.setStepID(stepID + "");
+        Context provContext = getProvenanceContext();
 
         Agent provAgent = new Agent();
         provAgent.setID("UV");
@@ -145,6 +167,7 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
         Communication provCom = new Communication();
         provCom.setRole("transformer");
         provCom.setAgent("RMLService");
+        provCom.setInput(new ArrayList<DataProperty>());
 
         provAct.setCommunication(new ArrayList<Communication>());
         provAct.getCommunication().add(provCom);
@@ -153,7 +176,8 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
         provInput.setKey("harvestedContent");
         DataProperty provOutput = new DataProperty();
         provOutput.setKey("transformerData");
-
+        provOutput.setRole("tempDataset");
+        
         provContent.setContext(provContext);
         provContent.setAgent(provAgent);
         provContent.setActivity(provAct);
