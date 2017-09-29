@@ -17,6 +17,8 @@ import java.util.Map;
  * @author jkesanie
  */
 public class RMLServiceOutput {
+    @JsonProperty("contentType")
+    private String contentType;    
     @JsonProperty("status")
     private String status;
     @JsonProperty("transformedDatasetURL")
@@ -24,6 +26,16 @@ public class RMLServiceOutput {
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
+    @JsonProperty("contentType")
+    public String getContentType() {
+        return contentType;
+    }
+
+    @JsonProperty("contentType")
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }    
+    
     @JsonProperty("status")
     public String getStatus() {
         return status;
