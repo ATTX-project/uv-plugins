@@ -36,6 +36,8 @@ import org.openrdf.rio.RDFWriter;
 import org.openrdf.rio.Rio;
 import org.uh.hulib.attx.wc.uv.common.MessagingClient;
 import org.uh.hulib.attx.wc.uv.common.RabbitMQClient;
+import org.uh.hulib.attx.wc.uv.common.pojos.GraphManagerInput;
+import org.uh.hulib.attx.wc.uv.common.pojos.ProvenanceMessage;
 import org.uh.hulib.attx.wc.uv.common.pojos.ReplaceDSRequest;
 import org.uh.hulib.attx.wc.uv.common.pojos.ReplaceDSResponse;
 import org.uh.hulib.attx.wc.uv.common.pojos.prov.Activity;
@@ -54,6 +56,7 @@ import org.uh.hulib.attx.wc.uv.common.pojos.prov.Provenance;
 public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
 
     private static final Logger log = LoggerFactory.getLogger(ReplaceDS.class);
+    
 
     @DataUnit.AsInput(name = "outputDatasetMetadata", optional = false)
     public RDFDataUnit outputDatasetMetadata;
@@ -67,16 +70,37 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
     @DataUnit.AsInput(name = "datasetFiles", optional = true)
     public FilesDataUnit dataFiles;
 
+    
+    private long workflowID;
+    private long executionID;
+    private long stepID;
+    
     public ReplaceDS() {
         super(ReplaceDSVaadinDialog.class, ConfigHistory.noHistory(ReplaceDSConfig_V1.class));
     }
 
-    private Provenance createDatasetProv() throws Exception {
+    private String getOutputGraphURI() throws Exception {
+        return "http://data.hulib.helsinki.fi/attx/work/wf_" + workflowID + "_step_" + stepID + "/input"; 
+    }
+    
+    private String getInputGraphURI() throws Exception {
+        return "http://data.hulib.helsinki.fi/attx/work/wf_" + workflowID + "_step_" + stepID + "/output"; 
+    }
+    
+    private Context getProvenanceContext() throws Exception {
+        Context ctx = new Context();
+        ctx.setActivityID("" +executionID);
+        ctx.setStepID("" + stepID);
+        ctx.setWorkflowID("" + workflowID);
+                
+        return ctx;
+    }  
+    
+    private ProvenanceMessage getWorkflowExecutionMessage() throws Exception {
+        ProvenanceMessage provMessage = new ProvenanceMessage();
         // outputDatasetMetadata is required 
-        long stepID = ctx.getExecMasterContext().getDpuContext().getDpuInstanceId();
-        long workflowID = ctx.getExecMasterContext().getDpuContext().getPipelineId();
         RepositoryConnection c = outputDatasetMetadata.getConnection();
-        
+
 
         Map<String, Object> payload = new HashMap<String, Object>();
 
@@ -100,12 +124,12 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             
             writeGraph(c, g, System.out);
             
-            String targetGraph = "http://data.hulib.helsinki.fi/attx/work/wf_" + workflowID + "_step_" + stepID + "/input"; 
+            String targetGraph = getOutputGraphURI();
             String targetGraphTitle = getSinglePropertyValue(c, g, DC.TITLE);
             String targetGraphDesc = getSinglePropertyValue(c, g, DC.DESCRIPTION);
 
             DataProperty output = new DataProperty();
-            output.setKey("outputDataset");
+            output.setKey("inputDataset");
             output.setRole("Dataset");
             prov.setOutput(new ArrayList<DataProperty>());
             prov.getOutput().add(output);
@@ -115,7 +139,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             outputDataset.put("title", targetGraphTitle);
             outputDataset.put("description", targetGraphDesc);
 
-            payload.put("outputDataset", outputDataset);
+            payload.put("inputDataset", outputDataset);
         }
 
         URI[] externalDatasetMetadataGraphs = RDFHelper.getGraphsURIArray(inputDatasetMetadata);
@@ -126,14 +150,14 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             writeGraph(c, g, System.out);
             
             
-            String sourceGraph = "http://data.hulib.helsinki.fi/attx/work/wf_" + workflowID + "_step_" + stepID + "/output"; 
+            String sourceGraph = getInputGraphURI();
             String sourceGraphTitle = getSinglePropertyValue(c, g, DC.TITLE);
             String sourceGraphDesc = getSinglePropertyValue(c, g, DC.DESCRIPTION);
             String sourceGraphPublisher = getSinglePropertyValue(c, g, DC.PUBLISHER);
             String sourceGraphLicense = getSinglePropertyValue(c, g, DC.RIGHTS);
 
             DataProperty input = new DataProperty();
-            input.setKey("inputDataset");
+            input.setKey("outputDataset");
             input.setRole("Dataset");
             prov.setInput(new ArrayList<DataProperty>());
             prov.getInput().add(input);
@@ -150,13 +174,15 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             if(sourceGraphLicense != null)
                 inputDataset.put("license", sourceGraphLicense);
 
-            payload.put("inputDataset", inputDataset);
+            payload.put("outputDataset", inputDataset);
 
         }
         // check for existing datasets         
-        prov.setAdditionalProperty("payload", payload);
+        
+        provMessage.setProvenance(prov);
+        provMessage.setPayload(payload);
 
-        return prov;
+        return provMessage;
 
     }
 
@@ -164,21 +190,24 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
     protected void innerExecute() throws DPUException {
 
         ContextUtils.sendShortInfo(ctx, "ReplaceDS.message");
+        this.stepID = ctx.getExecMasterContext().getDpuContext().getDpuInstanceId();
+        this.workflowID = ctx.getExecMasterContext().getDpuContext().getPipelineId();
+        this.executionID = ctx.getExecMasterContext().getDpuContext().getPipelineExecutionId();
+
 
         try {
             MessagingClient mq = new RabbitMQClient("messagebroker", System.getenv("RABBITMQ_DEFAULT_USER"), System.getenv("RABBITMQ_DEFAULT_PASS"), "provenance.inbox");
             ObjectMapper mapper = new ObjectMapper();
-            Provenance stepProv = getProv();
+            ProvenanceMessage provMessageStep = new ProvenanceMessage();            
+            Provenance stepProv = getStepProv();
+            provMessageStep.setProvenance(stepProv);
             
             try {
 
                 RepositoryConnection c = outputDatasetMetadata.getConnection();
 
                 // create dataset related prov content
-                Provenance datasetProv = createDatasetProv();
-                System.out.println("Generated dataset prov");
-                Map<String, Object> payload = (Map<String, Object>) datasetProv.getAdditionalProperties().get("payload");
-                String outputDatasetURI = ((Map<String, Object>) payload.get("outputDataset")).get("uri").toString();
+                
 
                 Set<FilesDataUnit.Entry> fileEntries = FilesHelper.getFiles(dataFiles);
                 System.out.println("datasetFiles size:" + fileEntries.size());
@@ -197,16 +226,41 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                             inputURIs.add(inputURI);
                         }
                     }
-
                     ReplaceDSRequest request = new ReplaceDSRequest();
-                    request.setSourceURIs(inputURIs);
-                    request.setTargetURI(outputDatasetURI);
+                    ReplaceDSRequest.ReplaceDSRequestPayload p = request.new ReplaceDSRequestPayload();
 
-                    ReplaceDSResponse response = mapper.readValue(mq.sendSyncServiceMessage(mapper.writeValueAsString(request), "attx.GMApi", 10000), ReplaceDSResponse.class);
+                    
+                    GraphManagerInput graphManagerInput = new GraphManagerInput();
+                    graphManagerInput.setActivity("replace");
+                    graphManagerInput.setContentType("application/n-triples");
+                    graphManagerInput.setInputType("URI");
+                    graphManagerInput.setNamedGraph(getOutputGraphURI());
+                    graphManagerInput.setInput(inputURIs.get(0));
+                    
+                    p.setGraphManagerInput(graphManagerInput);
+                    request.setPayload(p);
+                    Provenance requestProv = new Provenance();
+                    requestProv.setContext(getProvenanceContext());
+                    request.setProvenance(requestProv);
+                    
+                    String requestStr = mapper.writeValueAsString(request);
+                    String responseStr = mq.sendSyncServiceMessage(requestStr, "attx.graphManager.inbox", 10000);
+                    
+                    System.out.println(responseStr);
+                    if(responseStr == null) {
+                        throw new Exception("Null response from service");                    
+                    }
 
-                    stepProv.getActivity().setStatus(response.getStatus());
-                    mq.sendProvMessage(mapper.writeValueAsString(stepProv));
-                    mq.sendProvMessage(mapper.writeValueAsString(datasetProv));
+                    ReplaceDSResponse response = mapper.readValue(responseStr, ReplaceDSResponse.class);
+                                        
+                    
+                    // add payload to the stepProv
+                    provMessageStep.getPayload().put("transformerData", getInputGraphURI());
+                    provMessageStep.getPayload().put("outputDataset", getOutputGraphURI());
+
+                    mq.sendProvMessage(mapper.writeValueAsString(provMessageStep));
+                                                           
+                    mq.sendProvMessage(mapper.writeValueAsString(getWorkflowExecutionMessage()));
 
                     
                 } else if (fileEntries.size() > 0) {
@@ -215,8 +269,8 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             } catch (Exception ex) {
                 ex.printStackTrace();
                 stepProv.getActivity().setStatus("FAILED");
-                mq.sendProvMessage(mapper.writeValueAsString(stepProv));
-                ContextUtils.sendError(ctx, "Error occured.", ex.getMessage());
+                mq.sendProvMessage(mapper.writeValueAsString(provMessageStep));
+                ContextUtils.sendError(ctx, "Error occured.", ex, ex.getMessage());
 
             }
 
@@ -255,17 +309,10 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
         writer.endRDF();
     }
 
-    private Provenance getProv() {
-        long stepID = ctx.getExecMasterContext().getDpuContext().getDpuInstanceId();
-        long workflowID = ctx.getExecMasterContext().getDpuContext().getPipelineId();
-        long activityID = ctx.getExecMasterContext().getDpuContext().getPipelineExecutionId();
+    private Provenance getStepProv() throws Exception {
 
         Provenance provContent = new Provenance();
-        Context provContext = new Context();
-        provContext.setActivityID(activityID + "");
-        provContext.setWorkflowID(workflowID + "");
-        provContext.setStepID(stepID + "");
-
+        
         Agent provAgent = new Agent();
         provAgent.setID("UV");
         provAgent.setRole("ETL");
@@ -276,17 +323,25 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
 
         Communication provCom = new Communication();
         provCom.setRole("graphmanager");
-        provCom.setAgent("GMApi");
-
+        provCom.setAgent("GMAPI");
+        provCom.setInput(new ArrayList<DataProperty>());
+        DataProperty comInput = new DataProperty();
+        comInput.setKey("transformerData");
+        comInput.setRole("tempDataset");
+        provCom.getInput().add(comInput);
+        
         provAct.setCommunication(new ArrayList<Communication>());
         provAct.getCommunication().add(provCom);
 
         DataProperty provInput = new DataProperty();
         provInput.setKey("transformerData");
+        provInput.setRole("tempDataset");
+        
         DataProperty provOutput = new DataProperty();
         provOutput.setKey("outputDataset");
-
-        provContent.setContext(provContext);
+        provOutput.setRole("Dataset");
+        
+        provContent.setContext(getProvenanceContext());
         provContent.setAgent(provAgent);
         provContent.setActivity(provAct);
         provContent.setInput(new ArrayList());

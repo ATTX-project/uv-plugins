@@ -43,11 +43,6 @@ public class ReplaceDSVaadinDialog extends AbstractDialog<ReplaceDSConfig_V1> {
         mainLayout.setHeight("-1px");
         mainLayout.setMargin(true);
 
-        final TextField config = new TextField("Target dataset URI");
-        config.setRequired(true);
-        config.setWidth("100%");
-        mainLayout.addComponent(config);
-
         setCompositionRoot(mainLayout);
     }
 }
