@@ -17,7 +17,7 @@ import java.util.Map;
  * @author jkesanie
  */
 public class RMLServiceInput {
-       @JsonProperty("sourceURI")
+        @JsonProperty("sourceURI")
         private String sourceURI;
         @JsonProperty("sourceData")
         private String sourceData;

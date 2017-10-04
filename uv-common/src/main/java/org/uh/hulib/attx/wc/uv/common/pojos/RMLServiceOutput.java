@@ -21,6 +21,9 @@ public class RMLServiceOutput {
     private String contentType;    
     @JsonProperty("status")
     private String status;
+    @JsonProperty("statusMessage")
+    private String statusMessage;
+
     @JsonProperty("transformedDatasetURL")
     private String transformedDatasetURL;
     @JsonIgnore
@@ -46,6 +49,16 @@ public class RMLServiceOutput {
         this.status = status;
     }
 
+    @JsonProperty("statusMessage")
+    public String getStatusMessage() {
+        return statusMessage;
+    }
+
+    @JsonProperty("statusMessage")
+    public void setStatusMessage(String statusMessage) {
+        this.statusMessage = statusMessage;    
+    }
+    
     @JsonProperty("transformedDatasetURL")
     public String getTransformedDatasetURL() {
         return transformedDatasetURL;
