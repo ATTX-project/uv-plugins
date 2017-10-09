@@ -17,33 +17,33 @@ import java.util.Map;
  * @author jkesanie
  */
 public class RMLServiceInput {
-        @JsonProperty("sourceURI")
-        private String sourceURI;
-        @JsonProperty("sourceData")
-        private String sourceData;
+        @JsonProperty("type")
+        private String type;
+        @JsonProperty("input")
+        private String input;
         @JsonProperty("mapping")
         private String mapping;
         @JsonIgnore
         private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
-        @JsonProperty("sourceURI")
-        public String getSourceURI() {
-            return sourceURI;
+        @JsonProperty("type")
+        public String getType() {
+            return type;
         }
 
         @JsonProperty("sourceURI")
-        public void setSourceURI(String sourceURI) {
-            this.sourceURI = sourceURI;
+        public void setType(String type) {
+            this.type = type;
         }
 
-        @JsonProperty("sourceData")
-        public String getSourceData() {
-            return sourceData;
+        @JsonProperty("input")
+        public String getInput() {
+            return input;
         }
 
-        @JsonProperty("sourceData")
-        public void setSourceData(String sourceData) {
-            this.sourceData = sourceData;
+        @JsonProperty("input")
+        public void setInput(String input) {
+            this.input = input;
         }
 
         @JsonProperty("mapping")
