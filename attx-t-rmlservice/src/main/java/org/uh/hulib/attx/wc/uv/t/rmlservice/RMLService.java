@@ -110,8 +110,9 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                     requestProv.setContext(getProvenanceContext());
                     request.setProvenance(requestProv);
                     RMLServiceInput requestInput = new RMLServiceInput();
+                    requestInput.setType("Data");
                     requestInput.setMapping(config.getConfiguration());
-                    requestInput.setSourceData(FileUtils.readFileToString(new File(new URI(fileEntries.iterator().next().getFileURIString())), "UTF-8"));
+                    requestInput.setInput(FileUtils.readFileToString(new File(new URI(fileEntries.iterator().next().getFileURIString())), "UTF-8"));
                     request.setPayload(requestInput);
                     String responseText = mq.sendSyncServiceMessage(mapper.writeValueAsString(request), "attx.RMLService", 10000);
                     if(responseText == null) {
