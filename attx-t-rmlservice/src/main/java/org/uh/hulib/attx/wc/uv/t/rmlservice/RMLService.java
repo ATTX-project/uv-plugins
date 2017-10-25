@@ -100,7 +100,7 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                 System.out.println("- RML conf:");
                 System.out.println(config.getConfiguration());
 
-                MessagingClient mq = new RabbitMQClient("messagebroker", System.getenv("RABBITMQ_DEFAULT_USER"), System.getenv("RABBITMQ_DEFAULT_PASS"), "provenance.inbox");
+                MessagingClient mq = new RabbitMQClient("messagebroker", System.getenv("MUSER"), System.getenv("MPASS"), "provenance.inbox");
                 ObjectMapper mapper = new ObjectMapper();
                 Provenance prov = getProv();                
 
@@ -114,11 +114,15 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                     requestInput.setMapping(config.getConfiguration());
                     requestInput.setInput(FileUtils.readFileToString(new File(new URI(fileEntries.iterator().next().getFileURIString())), "UTF-8"));
                     request.setPayload(requestInput);
-                    String responseText = mq.sendSyncServiceMessage(mapper.writeValueAsString(request), "attx.RMLService", 10000);
+                    String responseText = mq.sendSyncServiceMessage(mapper.writeValueAsString(request), "rmlservice", 10000);
                     if(responseText == null) {
                         throw new Exception("No response from service!");
                     }
+                    
                     RMLServiceResponse response = mapper.readValue(responseText, RMLServiceResponse.class);
+                    if(!response.getPayload().getStatus().equals("SUCCESS")) {
+                        throw new Exception("Transformation failed. " + response.getPayload().getStatusMessage());
+                    }
                     System.out.println(response.getPayload().getTransformedDatasetURL());
                     prov.getActivity().setStatus("SUCCESS");
                     
