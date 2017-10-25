@@ -40,6 +40,7 @@ import org.uh.hulib.attx.wc.uv.common.pojos.GraphManagerInput;
 import org.uh.hulib.attx.wc.uv.common.pojos.ProvenanceMessage;
 import org.uh.hulib.attx.wc.uv.common.pojos.ReplaceDSRequest;
 import org.uh.hulib.attx.wc.uv.common.pojos.ReplaceDSResponse;
+import org.uh.hulib.attx.wc.uv.common.pojos.Source;
 import org.uh.hulib.attx.wc.uv.common.pojos.prov.Activity;
 import org.uh.hulib.attx.wc.uv.common.pojos.prov.Agent;
 import org.uh.hulib.attx.wc.uv.common.pojos.prov.Communication;
@@ -196,7 +197,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
 
 
         try {
-            MessagingClient mq = new RabbitMQClient("messagebroker", System.getenv("RABBITMQ_DEFAULT_USER"), System.getenv("RABBITMQ_DEFAULT_PASS"), "provenance.inbox");
+            MessagingClient mq = new RabbitMQClient("messagebroker", System.getenv("MUSER"), System.getenv("MPASS"), "provenance.inbox");
             ObjectMapper mapper = new ObjectMapper();
             ProvenanceMessage provMessageStep = new ProvenanceMessage();            
             Provenance stepProv = getStepProv();
@@ -215,28 +216,30 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                 URI[] uriEntries = RDFHelper.getGraphsURIArray(dataURIs);
                 System.out.println("dataSetURIs size:" + uriEntries.length);
 
+                ReplaceDSRequest request = new ReplaceDSRequest();
+                ReplaceDSRequest.ReplaceDSRequestPayload p = request.new ReplaceDSRequestPayload();
+
+                
+
                 if (uriEntries.length > 0) {
-                    List<String> inputURIs = new ArrayList<>();
+                    GraphManagerInput graphManagerInput = new GraphManagerInput();
+                    graphManagerInput.setActivity("replace");
+                    graphManagerInput.setTargetGraph(getOutputGraphURI());
+                    graphManagerInput.setSourceData(new ArrayList());
 
                     for (URI graphURI : uriEntries) {
                         writeGraph(c, graphURI, System.out);
 
                         String inputURI = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
                         if (inputURI != null) {
-                            inputURIs.add(inputURI);
+                            Source source = new Source();
+                            source.setContentType("application/n-triples");
+                            source.setInputType("URI");
+                            source.setInput(inputURI);
+                            
+                            graphManagerInput.getSourceData().add(source);
                         }
-                    }
-                    ReplaceDSRequest request = new ReplaceDSRequest();
-                    ReplaceDSRequest.ReplaceDSRequestPayload p = request.new ReplaceDSRequestPayload();
-
-                    
-                    GraphManagerInput graphManagerInput = new GraphManagerInput();
-                    graphManagerInput.setActivity("replace");
-                    graphManagerInput.setContentType("application/n-triples");
-                    graphManagerInput.setInputType("URI");
-                    graphManagerInput.setNamedGraph(getOutputGraphURI());
-                    graphManagerInput.setInput(inputURIs.get(0));
-                    
+                    }                    
                     p.setGraphManagerInput(graphManagerInput);
                     request.setPayload(p);
                     Provenance requestProv = new Provenance();
@@ -246,12 +249,12 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                     String requestStr = mapper.writeValueAsString(request);
                     String responseStr = mq.sendSyncServiceMessage(requestStr, "attx.graphManager.inbox", 10000);
                     
-                    System.out.println(responseStr);
+                    log.info(responseStr);
                     if(responseStr == null) {
                         throw new Exception("Null response from service");                    
                     }
 
-                    ReplaceDSResponse response = mapper.readValue(responseStr, ReplaceDSResponse.class);
+                    //ReplaceDSResponse response = mapper.readValue(responseStr, ReplaceDSResponse.class);
                                         
                     
                     // add payload to the stepProv
