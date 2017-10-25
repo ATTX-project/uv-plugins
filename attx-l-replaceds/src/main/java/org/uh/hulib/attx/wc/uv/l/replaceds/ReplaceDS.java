@@ -26,10 +26,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.DC;
 import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.RepositoryResult;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFWriter;
@@ -97,10 +99,9 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
         return ctx;
     }  
     
-    private ProvenanceMessage getWorkflowExecutionMessage() throws Exception {
+    private ProvenanceMessage getWorkflowExecutionMessage(RepositoryConnection c) throws Exception {
         ProvenanceMessage provMessage = new ProvenanceMessage();
         // outputDatasetMetadata is required 
-        RepositoryConnection c = outputDatasetMetadata.getConnection();
 
 
         Map<String, Object> payload = new HashMap<String, Object>();
@@ -183,6 +184,8 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
         provMessage.setProvenance(prov);
         provMessage.setPayload(payload);
 
+        
+        
         return provMessage;
 
     }
@@ -195,7 +198,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
         this.workflowID = ctx.getExecMasterContext().getDpuContext().getPipelineId();
         this.executionID = ctx.getExecMasterContext().getDpuContext().getPipelineExecutionId();
 
-
+        RepositoryConnection c = null;
         try {
             MessagingClient mq = new RabbitMQClient("messagebroker", System.getenv("MUSER"), System.getenv("MPASS"), "provenance.inbox");
             ObjectMapper mapper = new ObjectMapper();
@@ -205,7 +208,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             
             try {
 
-                RepositoryConnection c = outputDatasetMetadata.getConnection();
+                c = outputDatasetMetadata.getConnection();
 
                 // create dataset related prov content
                 
@@ -263,7 +266,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
 
                     mq.sendProvMessage(mapper.writeValueAsString(provMessageStep));
                                                            
-                    mq.sendProvMessage(mapper.writeValueAsString(getWorkflowExecutionMessage()));
+                    mq.sendProvMessage(mapper.writeValueAsString(getWorkflowExecutionMessage(c)));
 
                     
                 } else if (fileEntries.size() > 0) {
@@ -279,6 +282,14 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
 
         } catch (Exception ex) {
             ex.printStackTrace();
+        } finally {
+            if(c != null) {
+                try {
+                    c.close();
+                } catch (RepositoryException ex) {
+                    java.util.logging.Logger.getLogger(ReplaceDS.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
     }
 
