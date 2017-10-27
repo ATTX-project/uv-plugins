@@ -12,6 +12,16 @@ package org.uh.hulib.attx.wc.uv.l.replaceds;
  */
 public class ReplaceDSConfig_V1 {
 
+    private String graphActivity;
+
+    public String getGraphActivity() {
+        return graphActivity;
+    }
+
+    public void setGraphActivity(String graphActivity) {
+        this.graphActivity = graphActivity;
+    }
+    
     public ReplaceDSConfig_V1() {
 
     }

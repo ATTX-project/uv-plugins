@@ -226,7 +226,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
 
                 if (uriEntries.length > 0) {
                     GraphManagerInput graphManagerInput = new GraphManagerInput();
-                    graphManagerInput.setActivity("replace");
+                    graphManagerInput.setActivity(config.getGraphActivity());
                     graphManagerInput.setTargetGraph(getOutputGraphURI());
                     graphManagerInput.setSourceData(new ArrayList());
 
