@@ -100,7 +100,7 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                 System.out.println("- RML conf:");
                 System.out.println(config.getConfiguration());
 
-                MessagingClient mq = new RabbitMQClient("messagebroker", System.getenv("MUSER"), System.getenv("MPASS"), "provenance.inbox");
+                RabbitMQClient mq = new RabbitMQClient("messagebroker", System.getenv("MUSER"), System.getenv("MPASS"), "provenance.inbox");
                 ObjectMapper mapper = new ObjectMapper();
                 Provenance prov = getProv();                
 
@@ -147,6 +147,8 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                     prov.getActivity().setStatus("FAILED");
                     mq.sendProvMessage(mapper.writeValueAsString(prov));
                     ContextUtils.sendError(ctx, "Error occured.", ex.getMessage());
+                } finally {
+                    mq.close();
                 }
 
             }
