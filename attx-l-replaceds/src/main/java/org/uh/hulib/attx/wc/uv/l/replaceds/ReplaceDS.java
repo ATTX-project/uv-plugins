@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import eu.unifiedviews.helpers.dpu.config.ConfigHistory;
 import eu.unifiedviews.helpers.dpu.context.ContextUtils;
 import eu.unifiedviews.helpers.dpu.exec.AbstractDpu;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -199,11 +200,16 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
         this.executionID = ctx.getExecMasterContext().getDpuContext().getPipelineExecutionId();
 
         RepositoryConnection c = null;
+        RabbitMQClient mq = null;
         try {
-            MessagingClient mq = new RabbitMQClient("messagebroker", System.getenv("MUSER"), System.getenv("MPASS"), "provenance.inbox");
+            mq = new RabbitMQClient("messagebroker", System.getenv("MUSER"), System.getenv("MPASS"), "provenance.inbox");
             ObjectMapper mapper = new ObjectMapper();
             ProvenanceMessage provMessageStep = new ProvenanceMessage();            
             Provenance stepProv = getStepProv();
+            // add payload to the stepProv
+            provMessageStep.getPayload().put("transformerData", getInputGraphURI());
+            provMessageStep.getPayload().put("outputDataset", getOutputGraphURI());
+            
             provMessageStep.setProvenance(stepProv);
             
             try {
@@ -250,6 +256,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                     request.setProvenance(requestProv);
                     
                     String requestStr = mapper.writeValueAsString(request);
+                    log.info(requestStr);
                     String responseStr = mq.sendSyncServiceMessage(requestStr, "attx.graphManager.inbox", 10000);
                     
                     log.info(responseStr);
@@ -260,13 +267,14 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                     //ReplaceDSResponse response = mapper.readValue(responseStr, ReplaceDSResponse.class);
                                         
                     
-                    // add payload to the stepProv
-                    provMessageStep.getPayload().put("transformerData", getInputGraphURI());
-                    provMessageStep.getPayload().put("outputDataset", getOutputGraphURI());
 
-                    mq.sendProvMessage(mapper.writeValueAsString(provMessageStep));
-                                                           
-                    mq.sendProvMessage(mapper.writeValueAsString(getWorkflowExecutionMessage(c)));
+                    String provStepMessage = mapper.writeValueAsString(provMessageStep);
+                    log.info(provStepMessage);
+                    mq.sendProvMessage(provStepMessage);
+                                                      
+                    String provWorkflowMessage = mapper.writeValueAsString(getWorkflowExecutionMessage(c));
+                    log.info(provWorkflowMessage);
+                    mq.sendProvMessage(provWorkflowMessage);
 
                     
                 } else if (fileEntries.size() > 0) {
@@ -275,6 +283,8 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             } catch (Exception ex) {
                 ex.printStackTrace();
                 stepProv.getActivity().setStatus("FAILED");
+                String provStepMessage = mapper.writeValueAsString(provMessageStep);
+                log.info(provStepMessage);
                 mq.sendProvMessage(mapper.writeValueAsString(provMessageStep));
                 ContextUtils.sendError(ctx, "Error occured.", ex, ex.getMessage());
 
@@ -287,6 +297,13 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                 try {
                     c.close();
                 } catch (RepositoryException ex) {
+                    java.util.logging.Logger.getLogger(ReplaceDS.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            if(mq != null) {
+                try {
+                    mq.close();
+                } catch (IOException ex) {
                     java.util.logging.Logger.getLogger(ReplaceDS.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }

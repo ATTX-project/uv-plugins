@@ -51,8 +51,8 @@ public class ReplaceDSVaadinDialog extends AbstractDialog<ReplaceDSConfig_V1> {
         graphActivity.setCaption("Action");        
         graphActivity.addItem("replace");
         graphActivity.addItem("add");
-        graphActivity.setValue("replace");
-        graphActivity.setRequired(true);
+        graphActivity.setValue("replace");        
+        graphActivity.setRequired(true);        
         mainLayout.addComponent(graphActivity);
         
         setCompositionRoot(mainLayout);
