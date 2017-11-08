@@ -13,6 +13,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class Source {
 
+    @JsonProperty("docType")
+    private String docType;
     @JsonProperty("contentType")
     private String contentType;
     @JsonProperty("inputType")
@@ -20,6 +22,16 @@ public class Source {
     @JsonProperty("input")
     private String input;
 
+    @JsonProperty("docType")
+    public String getDocType() {
+        return docType;
+    }
+
+    @JsonProperty("docType")
+    public void setDocType(String docType) {
+        this.docType = docType;
+    }
+    
     @JsonProperty("contentType")
     public String getContentType() {
         return contentType;
