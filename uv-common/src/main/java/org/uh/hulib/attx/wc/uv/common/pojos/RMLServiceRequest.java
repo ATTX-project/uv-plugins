@@ -7,6 +7,7 @@ package org.uh.hulib.attx.wc.uv.common.pojos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RMLServiceRequest extends AbstractMessage {
@@ -22,6 +23,30 @@ public class RMLServiceRequest extends AbstractMessage {
     @JsonProperty("payload")
     public void setPayload(RMLServiceInput payload) {
         this.payload = payload;
+    }
+    
+    public class RMLServiceRequestPayload {
+
+        public RMLServiceRequestPayload() {
+        }
+
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @JsonPropertyOrder({
+            "rmlserviceInput"
+        })
+
+        @JsonProperty("rmlserviceInput")
+        private RMLServiceInput rmlserviceInput;
+
+        @JsonProperty("rmlserviceInput")
+        public RMLServiceInput getRMLServiceInput() {
+            return rmlserviceInput;
+        }
+
+        @JsonProperty("graphManagerInput")
+        public void setRMLServiceInput(RMLServiceInput rmlserviceInput) {
+            this.rmlserviceInput = rmlserviceInput;
+        }
     }
 
 }

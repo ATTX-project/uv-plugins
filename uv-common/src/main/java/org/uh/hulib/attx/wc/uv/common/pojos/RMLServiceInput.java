@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -17,34 +18,13 @@ import java.util.Map;
  * @author jkesanie
  */
 public class RMLServiceInput {
-        @JsonProperty("type")
-        private String type;
-        @JsonProperty("input")
-        private String input;
         @JsonProperty("mapping")
         private String mapping;
+        @JsonProperty("sourceData")
+        private List<Source> sourceData = null;
+        
         @JsonIgnore
         private Map<String, Object> additionalProperties = new HashMap<String, Object>();
-
-        @JsonProperty("type")
-        public String getType() {
-            return type;
-        }
-
-        @JsonProperty("sourceURI")
-        public void setType(String type) {
-            this.type = type;
-        }
-
-        @JsonProperty("input")
-        public String getInput() {
-            return input;
-        }
-
-        @JsonProperty("input")
-        public void setInput(String input) {
-            this.input = input;
-        }
 
         @JsonProperty("mapping")
         public String getMapping() {
@@ -55,6 +35,16 @@ public class RMLServiceInput {
         public void setMapping(String mapping) {
             this.mapping = mapping;
         }
+        @JsonProperty("sourceData")
+        public List<Source> getSourceData() {
+            return sourceData;
+        }
+
+        @JsonProperty("sourceData")
+        public void setSourceData(List<Source> sourceData) {
+            this.sourceData = sourceData;
+        }
+        
 
         @JsonAnyGetter
         public Map<String, Object> getAdditionalProperties() {
