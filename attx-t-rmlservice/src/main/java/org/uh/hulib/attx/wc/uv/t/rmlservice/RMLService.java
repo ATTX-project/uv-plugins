@@ -32,6 +32,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -109,11 +111,18 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
         RepositoryConnection c = null;
         RabbitMQClient mq = null;
 
-        try {
-            c = uriInput.getConnection();
-
-            Set<FilesDataUnit.Entry> fileEntries = FilesHelper.getFiles(filesInput);
-            org.openrdf.model.URI[] uriEntries = RDFHelper.getGraphsURIArray(uriInput);
+        try {             
+            org.openrdf.model.URI[] uriEntries = new org.openrdf.model.URI[0];
+            Set<FilesDataUnit.Entry> fileEntries = new HashSet<FilesDataUnit.Entry>();
+            if(uriInput != null) {                
+                c = uriInput.getConnection();
+                uriEntries = RDFHelper.getGraphsURIArray(uriInput);
+            }
+            else {               
+                c = filesInput.getConnection();
+                fileEntries = FilesHelper.getFiles(filesInput);
+            }
+            
             if (fileEntries.size() > 0 || uriEntries.length > 0) {
                 System.out.println("- RML conf:");
                 System.out.println(config.getConfiguration());
@@ -123,17 +132,21 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                 Provenance prov = getProv();
                 List<Source> files = new ArrayList<Source>();
                 try {
-                    while (fileEntries.iterator().hasNext()) {
+                    Iterator<FilesDataUnit.Entry> fileIterator = fileEntries.iterator();
+                    while (fileIterator.hasNext()) {
+                        log.info("test");
                         Source s = new Source();
                         s.setInputType("Data");
-                        s.setInput(FileUtils.readFileToString(new File(new URI(fileEntries.iterator().next().getFileURIString())), "UTF-8"));
+                        s.setInput(FileUtils.readFileToString(new File(new URI(fileIterator.next().getFileURIString())), "UTF-8"));
                     }
+                    log.info("Read data inputs");
                     for (org.openrdf.model.URI graphURI : uriEntries) {
                         String inputURI = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
                         Source s = new Source();
                         s.setInputType("URI");
                         s.setInput(inputURI);
                     }
+                    log.info("Read uri inputs");
                     RMLServiceRequest request = new RMLServiceRequest();
                     Provenance requestProv = new Provenance();
                     requestProv.setContext(getProvenanceContext());
@@ -142,7 +155,9 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                     requestInput.setMapping(config.getConfiguration());
                     requestInput.setSourceData(files);
                     request.setPayload(requestInput);
-                    String responseText = mq.sendSyncServiceMessage(mapper.writeValueAsString(request), "rmlservice", 10000);
+                    String requestStr = mapper.writeValueAsString(request);
+                    log.info(requestStr);
+                    String responseText = mq.sendSyncServiceMessage(requestStr, "rmlservice", 10000);
                     if (responseText == null) {
                         throw new Exception("No response from service!");
                     }
