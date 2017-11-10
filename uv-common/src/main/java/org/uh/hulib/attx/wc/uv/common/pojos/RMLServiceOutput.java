@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,8 +25,8 @@ public class RMLServiceOutput {
     @JsonProperty("statusMessage")
     private String statusMessage;
 
-    @JsonProperty("transformedDatasetURL")
-    private String transformedDatasetURL;
+    @JsonProperty("transformedDatasetURIs")
+    private List<String> transformedDatasetURIs;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -59,14 +60,14 @@ public class RMLServiceOutput {
         this.statusMessage = statusMessage;    
     }
     
-    @JsonProperty("transformedDatasetURL")
-    public String getTransformedDatasetURL() {
-        return transformedDatasetURL;
+    @JsonProperty("transformedDatasetURIs")
+    public List<String> getTransformedDatasetURIs() {
+        return transformedDatasetURIs;
     }
 
-    @JsonProperty("transformedDatasetURL")
-    public void setTransformedDatasetURL(String transformedDatasetURL) {
-        this.transformedDatasetURL = transformedDatasetURL;
+    @JsonProperty("transformedDatasetURIs")
+    public void setTransformedDatasetURIs(List<String> transformedDatasetURIs) {
+        this.transformedDatasetURIs = transformedDatasetURIs;
     }
 
     @JsonAnyGetter
