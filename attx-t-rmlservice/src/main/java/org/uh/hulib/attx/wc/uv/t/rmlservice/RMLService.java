@@ -151,7 +151,6 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                     if (!response.getPayload().getStatus().equals("SUCCESS")) {
                         throw new Exception("Transformation failed. " + response.getPayload().getStatusMessage());
                     }
-                    System.out.println(response.getPayload().getTransformedDatasetURL());
                     prov.getActivity().setStatus("SUCCESS");
 
                     ProvenanceMessage provMsg = new ProvenanceMessage();
@@ -165,7 +164,10 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                             DataUnitUtils.generateSymbolicName(RMLService.class));
 
                     final EntityBuilder datasetUriEntity = new EntityBuilder(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/RMLService"), vf);
-                    datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"), vf.createURI(response.getPayload().getTransformedDatasetURL()));
+                    for(String uri : response.getPayload().getTransformedDatasetURIs()) {
+                        datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"), vf.createURI(uri));
+                    }
+                    
 
                     rdfData.setOutput(entry);
                     rdfData.add(datasetUriEntity.asStatements());
