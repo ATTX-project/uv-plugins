@@ -138,6 +138,7 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                         Source s = new Source();
                         s.setInputType("Data");
                         s.setInput(FileUtils.readFileToString(new File(new URI(fileIterator.next().getFileURIString())), "UTF-8"));
+                        files.add(s);
                     }
                     log.info("Read data inputs");
                     for (org.openrdf.model.URI graphURI : uriEntries) {
@@ -145,6 +146,7 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                         Source s = new Source();
                         s.setInputType("URI");
                         s.setInput(inputURI);
+                        files.add(s);
                     }
                     log.info("Read uri inputs");
                     RMLServiceRequest request = new RMLServiceRequest();
@@ -162,6 +164,7 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                         throw new Exception("No response from service!");
                     }
 
+                    log.info(responseText);
                     RMLServiceResponse response = mapper.readValue(responseText, RMLServiceResponse.class);
                     if (!response.getPayload().getStatus().equals("SUCCESS")) {
                         throw new Exception("Transformation failed. " + response.getPayload().getStatusMessage());
@@ -178,14 +181,15 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                             datasetURI,
                             DataUnitUtils.generateSymbolicName(RMLService.class));
 
-                    final EntityBuilder datasetUriEntity = new EntityBuilder(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/RMLService"), vf);
+                    rdfData.setOutput(entry);
+
                     for(String uri : response.getPayload().getTransformedDatasetURIs()) {
+                        final EntityBuilder datasetUriEntity = new EntityBuilder(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/RMLService"), vf);
                         datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"), vf.createURI(uri));
+                        rdfData.add(datasetUriEntity.asStatements());
                     }
                     
 
-                    rdfData.setOutput(entry);
-                    rdfData.add(datasetUriEntity.asStatements());
 
                 } catch (Exception ex) {
                     ex.printStackTrace();
