@@ -117,7 +117,8 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
         provAct.setTitle("TODO: name of the workflow should be here");
         provAct.setType("DescribeStepExecution");
         prov.setActivity(provAct);
-
+        prov.setContext(getProvenanceContext());
+        
         URI[] datasetMetadataGraphs = RDFHelper.getGraphsURIArray(outputDatasetMetadata);
         
         
@@ -132,7 +133,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             String targetGraphDesc = getSinglePropertyValue(c, g, DC.DESCRIPTION);
 
             DataProperty output = new DataProperty();
-            output.setKey("inputDataset");
+            output.setKey("outputDataset");
             output.setRole("Dataset");
             prov.setOutput(new ArrayList<DataProperty>());
             prov.getOutput().add(output);
@@ -142,7 +143,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             outputDataset.put("title", targetGraphTitle);
             outputDataset.put("description", targetGraphDesc);
 
-            payload.put("inputDataset", outputDataset);
+            payload.put("outputDataset", outputDataset);
         }
 
         URI[] externalDatasetMetadataGraphs = RDFHelper.getGraphsURIArray(inputDatasetMetadata);
@@ -160,7 +161,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             String sourceGraphLicense = getSinglePropertyValue(c, g, DC.RIGHTS);
 
             DataProperty input = new DataProperty();
-            input.setKey("outputDataset");
+            input.setKey("inputDataset");
             input.setRole("Dataset");
             prov.setInput(new ArrayList<DataProperty>());
             prov.getInput().add(input);
@@ -177,7 +178,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             if(sourceGraphLicense != null)
                 inputDataset.put("license", sourceGraphLicense);
 
-            payload.put("outputDataset", inputDataset);
+            payload.put("inputDataset", inputDataset);
 
         }
         // check for existing datasets         
@@ -264,6 +265,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                         throw new Exception("Null response from service");                    
                     }
 
+                    //TODO: get the status from response
                     //ReplaceDSResponse response = mapper.readValue(responseStr, ReplaceDSResponse.class);
                                         
                     
