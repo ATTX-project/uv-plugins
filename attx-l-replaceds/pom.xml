@@ -34,6 +34,11 @@
             <name>attx-releases-ext</name>
             <url>http://attx-dev.hulib.helsinki.fi:8081/repository/attx-releases</url>
         </repository>
+        <repository>
+            <id>attx-proxy</id>
+            <name>proxy</name>
+            <url>http://attx-dev.hulib.helsinki.fi:8081/repository/internal</url>
+        </repository>        
     </repositories>
     <properties>
         <dpu.package>org.uh.hulib.attx.wc.uv.l.replaceds</dpu.package>
