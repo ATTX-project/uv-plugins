@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class ConstructRequestMessage extends AbstractMessage {
      @JsonProperty("payload")
-    private ConstructRequestMessage.ConstructRequestMessagePayload payload;
+    private ConstructRequestMessage.ConstructRequestMessagePayload payload = new ConstructRequestMessage.ConstructRequestMessagePayload();
 
     @JsonProperty("payload")
     public ConstructRequestMessage.ConstructRequestMessagePayload getPayload() {
