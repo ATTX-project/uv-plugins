@@ -25,7 +25,7 @@ public class ConstructRequestMessage extends AbstractMessage {
        this.payload = payload;
     } 
 
-    private static class ConstructRequestMessagePayload {
+    public class ConstructRequestMessagePayload {
 
         public ConstructRequestMessagePayload() {
         }
