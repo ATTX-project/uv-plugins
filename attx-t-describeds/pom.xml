@@ -20,9 +20,29 @@
             <url>http://repository.unifiedviews.eu/nexus/content/repositories/public/</url>
         </repository>
         <repository>
+            <id>maven.eea.sk</id>
+            <name>maven.eea.sk</name>
+            <url>http://maven.eea.sk/artifactory/public/</url>
+        </repository>        
+        <repository>
             <id>attx-releases</id>
             <name>attx-releases</name>
-            <url>http://attx-dev:8081/repository/attx-releases</url>
+            <url>http://archiva:8080/repository/attx-releases</url>
+        </repository>        
+        <repository>
+            <id>attx-internal</id>
+            <name>attx-releases</name>
+            <url>http://archiva:8080/repository/internal</url>
+        </repository>         
+        <repository>
+            <id>attx-releases-ext</id>
+            <name>attx-releases-ext</name>
+            <url>http://attx-dev.hulib.helsinki.fi:8081/repository/attx-releases</url>
+        </repository>
+        <repository>
+            <id>attx-proxy</id>
+            <name>proxy</name>
+            <url>http://attx-dev.hulib.helsinki.fi:8081/repository/internal</url>
         </repository>
     </repositories>
     <properties>
