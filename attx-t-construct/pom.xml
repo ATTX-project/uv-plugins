@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>eu.unifiedviews</groupId>
+        <artifactId>uv-pom-dpu</artifactId>
+        <version>2.1.7</version>
+        <relativePath/>
+    </parent>
+    <groupId>org.uh.hulib.attx.wc</groupId>
+    <artifactId>attx-t-construct</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>bundle</packaging>
+    <name>attx-t-construct</name>
+    <description></description>
+    <repositories>        
+        <repository>
+            <id>repository.unifiedviews.eu</id>
+            <name>repository.unifiedviews.eu-public</name>
+            <url>http://repository.unifiedviews.eu/nexus/content/repositories/public/</url>
+        </repository>
+        <repository>
+            <id>maven.eea.sk</id>
+            <name>maven.eea.sk</name>
+            <url>http://maven.eea.sk/artifactory/public/</url>
+        </repository>        
+        <repository>
+            <id>attx-releases</id>
+            <name>attx-releases</name>
+            <url>http://archiva:8080/repository/attx-releases</url>
+        </repository>        
+        <repository>
+            <id>attx-internal</id>
+            <name>attx-releases</name>
+            <url>http://archiva:8080/repository/internal</url>
+        </repository>         
+        <repository>
+            <id>attx-releases-ext</id>
+            <name>attx-releases-ext</name>
+            <url>http://attx-dev.hulib.helsinki.fi:8081/repository/attx-releases</url>
+        </repository>
+        <repository>
+            <id>attx-proxy</id>
+            <name>proxy</name>
+            <url>http://attx-dev.hulib.helsinki.fi:8081/repository/internal</url>
+        </repository>               
+    </repositories>
+    <properties>
+        <dpu.package>org.uh.hulib.attx.wc.uv.e.construct</dpu.package>
+        <dpu.mainClass>Construct</dpu.mainClass>
+    </properties>
+
+    <build>
+        <directory>build/libs</directory>
+<plugins> 
+      
+  <plugin>
+    <groupId>org.apache.felix</groupId>
+    <artifactId>maven-bundle-plugin</artifactId>
+    <extensions>true</extensions>
+    <configuration>
+      <instructions>
+         <!--<Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency> -->
+        <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
+        <Embed-Transitive>true</Embed-Transitive> 
+      </instructions>
+    </configuration>
+  </plugin>    
+  
+</plugins>        
+    </build>
+
+    <dependencies>
+        <!-- UnifiedViews helpers. -->
+        <dependency>
+            <groupId>eu.unifiedviews</groupId>
+            <artifactId>uv-dataunit-helpers</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>eu.unifiedviews</groupId>
+            <artifactId>uv-dpu-helpers</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.uh.hulib.attx.wc.uv</groupId>
+          <artifactId>uv-common</artifactId>
+          <version>1.0-SNAPSHOT</version>
+          <!--
+          <scope>system</scope>
+          <systemPath>${project.basedir}/../uv-common/build/libs/uv-common-1.0-SNAPSHOT.jar</systemPath>
+          -->
+        </dependency>
+        
+        <!-- Other dependencies --> 
+
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-core</artifactId>
+    <version>2.9.0</version>
+</dependency>
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-annotations</artifactId>
+    <version>2.9.0</version>
+</dependency>
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.9.0</version>
+</dependency>
+           
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-ejb_3.0_spec</artifactId>
+            <version>1.0.1</version>            
+        </dependency>
+
+<dependency>
+    <groupId>commons-io</groupId>
+    <artifactId>commons-io</artifactId>
+    <version>2.5</version>
+</dependency>
+  <dependency>
+    <groupId>com.rabbitmq</groupId>
+    <artifactId>amqp-client</artifactId>
+    <version>3.2.4</version>
+</dependency>           
+
+    </dependencies>
+    
+   
+
+</project>
