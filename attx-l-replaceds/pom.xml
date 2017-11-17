@@ -34,7 +34,6 @@
             <name>attx-releases</name>
             <url>http://archiva:8080/repository/internal</url>
         </repository>         
-        <!--
         <repository>
             <id>attx-releases-ext</id>
             <name>attx-releases-ext</name>
@@ -45,7 +44,6 @@
             <name>proxy</name>
             <url>http://attx-dev.hulib.helsinki.fi:8081/repository/internal</url>
         </repository>        
-        -->
     </repositories>
     <properties>
         <dpu.package>org.uh.hulib.attx.wc.uv.l.replaceds</dpu.package>
