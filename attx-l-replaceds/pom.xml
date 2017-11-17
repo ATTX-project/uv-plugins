@@ -22,7 +22,7 @@
         <repository>
             <id>attx-releases</id>
             <name>attx-releases</name>
-            <url>http://attx-dev:8081/repository/attx-releases</url>
+            <url>http://attx-dev.hulib.helsinki.fi:8081/repository/attx-releases</url>
         </repository>
     </repositories>
     <properties>
