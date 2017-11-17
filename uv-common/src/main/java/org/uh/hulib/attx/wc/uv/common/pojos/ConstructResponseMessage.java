@@ -34,12 +34,12 @@ public class ConstructResponseMessage extends AbstractMessage {
         private GraphManagerQueryOutput graphManagerConstructOutput;
 
         @JsonProperty("graphManagerOutput")
-        public GraphManagerQueryOutput getGraphManagerInput() {
+        public GraphManagerQueryOutput getGraphManagerOutput() {
             return graphManagerConstructOutput;
         }
 
         @JsonProperty("graphManagerOutput")
-        public void setGraphManagerInput(GraphManagerQueryOutput graphManagerConstructOutput) {
+        public void setGraphManagerOutput(GraphManagerQueryOutput graphManagerConstructOutput) {
             this.graphManagerConstructOutput = graphManagerConstructOutput;
         }
     }    
