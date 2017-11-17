@@ -46,7 +46,7 @@
         </repository>               
     </repositories>
     <properties>
-        <dpu.package>org.uh.hulib.attx.wc.uv.e.construct</dpu.package>
+        <dpu.package>org.uh.hulib.attx.wc.uv.t.construct</dpu.package>
         <dpu.mainClass>Construct</dpu.mainClass>
     </properties>
 
