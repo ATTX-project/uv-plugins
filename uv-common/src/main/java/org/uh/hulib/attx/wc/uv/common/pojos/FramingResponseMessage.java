@@ -32,16 +32,16 @@ public class FramingResponseMessage extends AbstractMessage {
         }
         
         @JsonProperty("framingServiceOutput")
-        private FramingServiceInput framingServiceInput;
+        private FramingServiceOutput framingServiceOutput;
 
-        @JsonProperty("framingServiceInput")
-        public FramingServiceInput getGraphManagerInput() {
-            return framingServiceInput;
+        @JsonProperty("framingServiceOutput")
+        public FramingServiceOutput getGraphManagerOutput() {
+            return framingServiceOutput;
         }
 
-        @JsonProperty("framingServiceInput")
-        public void setGraphManagerInput(FramingServiceInput framingServiceInput) {
-            this.framingServiceInput = framingServiceInput;
+        @JsonProperty("framingServiceOutput")
+        public void setGraphManagerOutput(FramingServiceOutput framingServiceOutput) {
+            this.framingServiceOutput = framingServiceOutput;
         }
     }
     
