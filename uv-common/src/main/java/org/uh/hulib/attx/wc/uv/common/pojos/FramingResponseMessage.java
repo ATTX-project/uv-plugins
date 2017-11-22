@@ -35,12 +35,12 @@ public class FramingResponseMessage extends AbstractMessage {
         private FramingServiceOutput framingServiceOutput;
 
         @JsonProperty("framingServiceOutput")
-        public FramingServiceOutput getGraphManagerOutput() {
+        public FramingServiceOutput getFramingServiceOutput() {
             return framingServiceOutput;
         }
 
         @JsonProperty("framingServiceOutput")
-        public void setGraphManagerOutput(FramingServiceOutput framingServiceOutput) {
+        public void setFramingServiceOutput(FramingServiceOutput framingServiceOutput) {
             this.framingServiceOutput = framingServiceOutput;
         }
     }
