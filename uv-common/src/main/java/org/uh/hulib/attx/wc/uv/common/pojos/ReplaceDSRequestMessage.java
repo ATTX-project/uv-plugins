@@ -39,6 +39,23 @@ public class ReplaceDSRequestMessage extends AbstractMessage {
         public ReplaceDSRequestPayload() {
         }
 
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @JsonPropertyOrder({
+            "graphManagerInput"
+        })
+
+        @JsonProperty("graphManagerInput")
+        private GraphManagerInput graphManagerInput;
+
+        @JsonProperty("graphManagerInput")
+        public GraphManagerInput getGraphManagerInput() {
+            return graphManagerInput;
+        }
+
+        @JsonProperty("graphManagerInput")
+        public void setGraphManagerInput(GraphManagerInput graphManagerInput) {
+            this.graphManagerInput = graphManagerInput;
+        }
     }
 
     
