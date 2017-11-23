@@ -32,12 +32,13 @@ public class ATTXClient {
         
         List<OptionValue> values = new ArrayList<OptionValue>();
         try {
-            String query = "SELECT DISTINCT ?g ?title\n" +
+            String query = "SELECT ?uri ?title ?source\n" +
+"from <http://data.hulib.helsinki.fi/attx/prov>\n" +
 "WHERE {\n" +
-"	GRAPH <http://data.hulib.helsinki.fi/attx/prov> {\n" +
-"	    ?g a <http://data.hulib.helsinki.fi/attx/onto#Dataset> .\n" +
-"		?g <http://data.hulib.helsinki.fi/attx/title> ?title .\n" +
-"	}\n" +
+" 	?uri a <http://data.hulib.helsinki.fi/attx/onto#Dataset> .\n" +
+"  	?uri <http://data.hulib.helsinki.fi/attx/uri> ?source .\n" +
+"	?uri <http://data.hulib.helsinki.fi/attx/title> ?title \n" +
+"    filter( regex(?source, \"/input\"))\n" +
 "}";
             HttpResponse<JsonNode> r = Unirest.post("http://fuseki:3030/test/query")
                         .header("Content-Type", "application/sparql-query")
@@ -49,7 +50,7 @@ public class ATTXClient {
             }
             JSONArray a = r.getBody().getObject().getJSONObject("results").getJSONArray("bindings");
             for(int i = 0; i < a.length(); i++) {
-                String uri = a.getJSONObject(i).getJSONObject("g").getString("value");
+                String uri = a.getJSONObject(i).getJSONObject("source").getString("value");
                 String label = a.getJSONObject(i).getJSONObject("title").getString("value");
                 values.add(new OptionValue(uri, label));
 
