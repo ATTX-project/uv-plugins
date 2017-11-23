@@ -41,8 +41,8 @@ import org.uh.hulib.attx.wc.uv.common.MessagingClient;
 import org.uh.hulib.attx.wc.uv.common.RabbitMQClient;
 import org.uh.hulib.attx.wc.uv.common.pojos.GraphManagerInput;
 import org.uh.hulib.attx.wc.uv.common.pojos.ProvenanceMessage;
-import org.uh.hulib.attx.wc.uv.common.pojos.ReplaceDSRequest;
-import org.uh.hulib.attx.wc.uv.common.pojos.ReplaceDSResponse;
+import org.uh.hulib.attx.wc.uv.common.pojos.ReplaceDSRequestMessage;
+import org.uh.hulib.attx.wc.uv.common.pojos.ReplaceDSResponseMessage;
 import org.uh.hulib.attx.wc.uv.common.pojos.Source;
 import org.uh.hulib.attx.wc.uv.common.pojos.prov.Activity;
 import org.uh.hulib.attx.wc.uv.common.pojos.prov.Agent;
@@ -119,12 +119,12 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
         prov.setActivity(provAct);
         prov.setContext(getProvenanceContext());
         
-        URI[] datasetMetadataGraphs = RDFHelper.getGraphsURIArray(outputDatasetMetadata);
+        URI[] outputGraphsMetadata = RDFHelper.getGraphsURIArray(outputDatasetMetadata);
         
         
-        if (datasetMetadataGraphs.length > 0) {
+        if (outputGraphsMetadata.length > 0) {
             // just using the first one for now!
-            URI g = datasetMetadataGraphs[0];
+            URI g = outputGraphsMetadata[0];
             
             writeGraph(c, g, System.out);
             
@@ -146,10 +146,10 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             payload.put("outputDataset", outputDataset);
         }
 
-        URI[] externalDatasetMetadataGraphs = RDFHelper.getGraphsURIArray(inputDatasetMetadata);
-        if (externalDatasetMetadataGraphs.length > 0) {
+        URI[] inputGraphsMetadata = RDFHelper.getGraphsURIArray(inputDatasetMetadata);
+        if (inputGraphsMetadata.length > 0) {
             // just using the first one for now!
-            URI g = externalDatasetMetadataGraphs[0];
+            URI g = inputGraphsMetadata[0];
             
             writeGraph(c, g, System.out);
             
@@ -226,28 +226,37 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                 URI[] uriEntries = RDFHelper.getGraphsURIArray(dataURIs);
                 System.out.println("dataSetURIs size:" + uriEntries.length);
 
-                ReplaceDSRequest request = new ReplaceDSRequest();
-                ReplaceDSRequest.ReplaceDSRequestPayload p = request.new ReplaceDSRequestPayload();
+                ReplaceDSRequestMessage request = new ReplaceDSRequestMessage();
+                ReplaceDSRequestMessage.ReplaceDSRequestPayload p = request.new ReplaceDSRequestPayload();
 
                 
 
                 if (uriEntries.length > 0) {
                     GraphManagerInput graphManagerInput = new GraphManagerInput();
-                    graphManagerInput.setActivity(config.getGraphActivity());
+                    graphManagerInput.setTask(config.getGraphActivity());
                     graphManagerInput.setTargetGraph(getOutputGraphURI());
                     graphManagerInput.setSourceData(new ArrayList());
 
                     for (URI graphURI : uriEntries) {
                         writeGraph(c, graphURI, System.out);
-
+                        // check for file URI
                         String inputURI = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
                         if (inputURI != null) {
                             Source source = new Source();
-                            source.setContentType("application/n-triples");
+
+                            String contentType = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileContentType"));
+                            if(contentType == null) {
+                                throw new Exception("No content type found the input data file!");
+                            }
+                            source.setContentType(contentType);
+
                             source.setInputType("URI");
                             source.setInput(inputURI);
                             
                             graphManagerInput.getSourceData().add(source);
+                        }
+                        else {
+                            //ContextUtils.sendError(ctx, "No input dataset files available.", );
                         }
                     }                    
                     p.setGraphManagerInput(graphManagerInput);
@@ -258,7 +267,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                     
                     String requestStr = mapper.writeValueAsString(request);
                     log.info(requestStr);
-                    String responseStr = mq.sendSyncServiceMessage(requestStr, "attx.graphManager.inbox", 10000);
+                    String responseStr = mq.sendSyncServiceMessage(requestStr, "attx.graphManager.inbox", 60000);
                     
                     log.info(responseStr);
                     if(responseStr == null) {
@@ -266,10 +275,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                     }
 
                     //TODO: get the status from response
-                    //ReplaceDSResponse response = mapper.readValue(responseStr, ReplaceDSResponse.class);
-                                        
-                    
-
+                    ReplaceDSResponseMessage response = mapper.readValue(responseStr, ReplaceDSResponseMessage.class);                    
                     String provStepMessage = mapper.writeValueAsString(provMessageStep);
                     log.info(provStepMessage);
                     mq.sendProvMessage(provStepMessage);

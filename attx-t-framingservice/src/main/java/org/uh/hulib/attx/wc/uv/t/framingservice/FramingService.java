@@ -3,16 +3,18 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.uh.hulib.attx.wc.uv.t.construct;
+package org.uh.hulib.attx.wc.uv.t.framingservice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import eu.unifiedviews.dataunit.DataUnit;
+import eu.unifiedviews.dataunit.files.FilesDataUnit;
 import eu.unifiedviews.dataunit.rdf.RDFDataUnit;
 import eu.unifiedviews.dataunit.rdf.WritableRDFDataUnit;
 import eu.unifiedviews.dpu.DPU;
 import eu.unifiedviews.dpu.DPUException;
 import eu.unifiedviews.helpers.dataunit.DataUnitUtils;
+import eu.unifiedviews.helpers.dataunit.files.FilesHelper;
 import eu.unifiedviews.helpers.dataunit.rdf.RDFHelper;
 import eu.unifiedviews.helpers.dataunit.rdf.RdfDataUnitUtils;
 import org.slf4j.Logger;
@@ -25,25 +27,34 @@ import eu.unifiedviews.helpers.dpu.extension.ExtensionInitializer;
 
 import eu.unifiedviews.helpers.dpu.extension.rdf.simple.WritableSimpleRdf;
 import eu.unifiedviews.helpers.dpu.rdf.EntityBuilder;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
+import org.apache.commons.io.FileUtils;
 import org.openrdf.model.Statement;
 import org.openrdf.model.ValueFactory;
-import org.openrdf.model.vocabulary.DC;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.RepositoryResult;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFWriter;
 import org.openrdf.rio.Rio;
+import org.uh.hulib.attx.wc.uv.common.MessagingClient;
 import org.uh.hulib.attx.wc.uv.common.RabbitMQClient;
 import org.uh.hulib.attx.wc.uv.common.pojos.ConstructRequestMessage;
-import org.uh.hulib.attx.wc.uv.common.pojos.ConstructResponseMessage;
-import org.uh.hulib.attx.wc.uv.common.pojos.GraphManagerQueryInput;
+import org.uh.hulib.attx.wc.uv.common.pojos.FramingRequestMessage;
+import org.uh.hulib.attx.wc.uv.common.pojos.FramingResponseMessage;
+import org.uh.hulib.attx.wc.uv.common.pojos.FramingServiceInput;
 import org.uh.hulib.attx.wc.uv.common.pojos.ProvenanceMessage;
+import org.uh.hulib.attx.wc.uv.common.pojos.RMLServiceInput;
+import org.uh.hulib.attx.wc.uv.common.pojos.Source;
 import org.uh.hulib.attx.wc.uv.common.pojos.prov.Activity;
 import org.uh.hulib.attx.wc.uv.common.pojos.prov.Agent;
 import org.uh.hulib.attx.wc.uv.common.pojos.prov.Communication;
@@ -57,27 +68,30 @@ import org.uh.hulib.attx.wc.uv.common.pojos.prov.Provenance;
  * @author Unknown
  */
 @DPU.AsTransformer
-public class Construct extends AbstractDpu<ConstructConfig_V1> {
+public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
 
     public static final String datasetURISymbolicName = "datasetURI";
 
-    private static final Logger log = LoggerFactory.getLogger(Construct.class);
+    private static final Logger log = LoggerFactory.getLogger(FramingService.class);
 
     private long workflowID;
     private long executionID;
     private long stepID;
 
-    @DataUnit.AsInput(name = "inputGraphURIs", optional=false)
-    public RDFDataUnit inputGraphURIs;
+    @DataUnit.AsInput(name = "fileInput", optional = true)
+    public FilesDataUnit filesInput;
 
-    @DataUnit.AsOutput(name = "datasetURI")
-    public WritableRDFDataUnit datasetURI;
+    @DataUnit.AsInput(name = "uriInput", optional = true)
+    public RDFDataUnit uriInput;
 
-    @ExtensionInitializer.Init(param = "datasetURI")
-    public WritableSimpleRdf rdfData;
+    @DataUnit.AsOutput(name = "fileURI")
+    public WritableRDFDataUnit fileURI;
 
-    public Construct() {
-        super(ConstructVaadinDialog.class, ConfigHistory.noHistory(ConstructConfig_V1.class));
+    @ExtensionInitializer.Init(param = "fileURI")
+    public WritableSimpleRdf fileData;
+
+    public FramingService() {
+        super(FramingServiceVaadinDialog.class, ConfigHistory.noHistory(FramingServiceConfig_V1.class));
     }
 
     private Context getProvenanceContext() throws Exception {
@@ -89,28 +103,10 @@ public class Construct extends AbstractDpu<ConstructConfig_V1> {
         return ctx;
     }
 
-    private void writeGraph(RepositoryConnection conn, org.openrdf.model.URI graph, OutputStream out) throws Exception {
-
-        final RDFWriter writer = Rio.createWriter(RDFFormat.TURTLE, out);
-        writer.startRDF();
-        System.out.println("Graph:" + graph.toString());
-        RepositoryResult<Statement> r = conn.getStatements(null, null, null, false, graph);
-        if (r.hasNext()) {
-            Statement stmt = null;
-            while ((stmt = r.next()) != null) {
-                writer.handleStatement(stmt);
-                if (!r.hasNext()) {
-                    break;
-                }
-            }
-
-        }
-        writer.endRDF();
-    }
     @Override
     protected void innerExecute() throws DPUException {
 
-        ContextUtils.sendShortInfo(ctx, "Construct.message");
+        ContextUtils.sendShortInfo(ctx, "FramingService starting");
         this.stepID = ctx.getExecMasterContext().getDpuContext().getDpuInstanceId();
         this.workflowID = ctx.getExecMasterContext().getDpuContext().getPipelineId();
         this.executionID = ctx.getExecMasterContext().getDpuContext().getPipelineExecutionId();
@@ -119,80 +115,88 @@ public class Construct extends AbstractDpu<ConstructConfig_V1> {
 
         try {             
             org.openrdf.model.URI[] uriEntries = new org.openrdf.model.URI[0];
-            c = inputGraphURIs.getConnection();
-            uriEntries = RDFHelper.getGraphsURIArray(inputGraphURIs);
+            Set<FilesDataUnit.Entry> fileEntries = new HashSet<FilesDataUnit.Entry>();
+            if(uriInput != null) {                
+                c = uriInput.getConnection();
+                uriEntries = RDFHelper.getGraphsURIArray(uriInput);
+            }
+            else {               
+                c = filesInput.getConnection();
+                fileEntries = FilesHelper.getFiles(filesInput);
+            }
             
-            if (uriEntries.length > 0) {
-                System.out.println("- conf:");
+            if (fileEntries.size() > 0 || uriEntries.length > 0) {
+                System.out.println("- RML conf:");
                 System.out.println(config.getConfiguration());
 
                 mq = new RabbitMQClient("messagebroker", System.getenv("MUSER"), System.getenv("MPASS"), "provenance.inbox");
                 ObjectMapper mapper = new ObjectMapper();
                 Provenance prov = getProv();
-                List<String> sourceGraphs = new ArrayList<String>();
+                List<Source> files = new ArrayList<Source>();
                 try {
+                    Iterator<FilesDataUnit.Entry> fileIterator = fileEntries.iterator();
+                    while (fileIterator.hasNext()) {
+                        Source s = new Source();
+                        s.setInputType("Data");
+                        s.setInput(FileUtils.readFileToString(new File(new URI(fileIterator.next().getFileURIString())), "UTF-8"));
+                        files.add(s);
+                    }
                     log.info("Read data inputs");
                     for (org.openrdf.model.URI graphURI : uriEntries) {
-                        writeGraph(c, graphURI, System.out);
-                        List<String> inputURIs = getAllPropertyValues(c, graphURI, DC.IDENTIFIER);
-                        for(String inputURI : inputURIs) {
-                            log.info("Adding source: " + inputURI);
-                            sourceGraphs.add(inputURI);
-                            
-                        }
+                        String inputURI = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
+                        Source s = new Source();
+                        s.setInputType("URI");
+                        s.setInput(inputURI);
+                        files.add(s);
                     }
                     log.info("Read uri inputs");
-                    ConstructRequestMessage request = new ConstructRequestMessage();
+                    FramingRequestMessage request = new FramingRequestMessage();
                     Provenance requestProv = new Provenance();
                     requestProv.setContext(getProvenanceContext());
                     request.setProvenance(requestProv);
-                    GraphManagerQueryInput requestInput = new GraphManagerQueryInput();
-                    requestInput.setInput(config.getConfiguration());
-                    requestInput.setTask("construct");
-                    requestInput.setOutputContentType("text/turtle");
-                    requestInput.setOutputType("URI");
-                    requestInput.setSourceGraph(sourceGraphs);
+                    FramingServiceInput requestInput = new FramingServiceInput();
+                    requestInput.setDocType(config.getDocType());
+                    requestInput.setLdFrame(config.getConfiguration());
+                    requestInput.setSourceData(files);
                     
-                    ConstructRequestMessage.ConstructRequestMessagePayload p = request.new ConstructRequestMessagePayload();                    
+                    FramingRequestMessage.FramingRequestMessagePayload p = request.new FramingRequestMessagePayload();                    
                     p.setGraphManagerInput(requestInput);
                     request.setPayload(p);
                     
-                    
                     String requestStr = mapper.writeValueAsString(request);
                     log.info(requestStr);
-                    String responseText = mq.sendSyncServiceMessage(requestStr, "attx.graphManager.inbox", 10000);
+                    String responseText = mq.sendSyncServiceMessage(requestStr, "attx.ldframe.inbox", 60000);
                     if (responseText == null) {
                         throw new Exception("No response from service!");
                     }
 
                     log.info(responseText);
-                    ConstructResponseMessage response = mapper.readValue(responseText, ConstructResponseMessage.class);
-//                    if (!response.getPayload().getStatus().equals("SUCCESS")) {
-  //                      throw new Exception("Transformation failed. " + response.getPayload().getStatusMessage());
-   //                 }
+                    FramingResponseMessage response = mapper.readValue(responseText, FramingResponseMessage.class);
+                    
+                    
+                    if (!response.getPayload().getStatus().equalsIgnoreCase("success")) {
+                        throw new Exception("Transformation failed. " + response.getPayload().getStatusMessage());
+                    }
                     prov.getActivity().setStatus("SUCCESS");
-
                     ProvenanceMessage provMsg = new ProvenanceMessage();
                     provMsg.setProvenance(prov);
                     mq.sendProvMessage(mapper.writeValueAsString(provMsg));
 
-                    final ValueFactory vf = rdfData.getValueFactory();
+                    final ValueFactory vf = fileData.getValueFactory();
                     // entry is the graph 
-                    final RDFDataUnit.Entry entry = RdfDataUnitUtils.addGraph(datasetURI,
-                            DataUnitUtils.generateSymbolicName(Construct.class));
+                    final RDFDataUnit.Entry entry = RdfDataUnitUtils.addGraph(fileURI,
+                            DataUnitUtils.generateSymbolicName(FramingService.class));
 
-                    rdfData.setOutput(entry);
-                    final EntityBuilder datasetUriEntity = new EntityBuilder(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/graphManager"), vf);
-                    
-                    String outputFile = response.getPayload().getGraphManagerOutput();
-                    if(!outputFile.startsWith("file://")) {
-                        outputFile = "file://" + outputFile;
-                    }
-                    String contentType = "text/turtle";
-                    datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"), vf.createURI(outputFile));
+                    fileData.setOutput(entry);
+
+                    String resultURI = response.getPayload().getFramingServiceOutput().getOutput();
+                    String contentType = response.getPayload().getFramingServiceOutput().getContentType();
+                    // TODO: what if the the result type if data?
+                    final EntityBuilder datasetUriEntity = new EntityBuilder(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/FramingService"), vf);
+                    datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"), vf.createURI(resultURI));
                     datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileContentType"), vf.createLiteral(contentType));
 
-                    rdfData.add(datasetUriEntity.asStatements());
+                    fileData.add(datasetUriEntity.asStatements());
                     
 
 
@@ -206,14 +210,14 @@ public class Construct extends AbstractDpu<ConstructConfig_V1> {
                         try {
                             c.close();
                         } catch (RepositoryException ex) {
-                            java.util.logging.Logger.getLogger(Construct.class.getName()).log(Level.SEVERE, null, ex);
+                            java.util.logging.Logger.getLogger(FramingService.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                     if (mq != null) {
                         try {
                             mq.close();
                         } catch (IOException ex) {
-                            java.util.logging.Logger.getLogger(Construct.class.getName()).log(Level.SEVERE, null, ex);
+                            java.util.logging.Logger.getLogger(FramingService.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 }
@@ -272,15 +276,4 @@ public class Construct extends AbstractDpu<ConstructConfig_V1> {
         }
 
     }  
-    
-    private List<String> getAllPropertyValues(RepositoryConnection c, org.openrdf.model.URI graph, org.openrdf.model.URI prop) throws Exception {
-        RepositoryResult<Statement> r = c.getStatements(null, prop, null, false, graph);
-        List<String> values = new ArrayList<String>();
-        while (r.hasNext()) {
-            Statement stmt = r.next();
-            values.add( stmt.getObject().stringValue());
-        }
-        return values;
-
-    }      
 }

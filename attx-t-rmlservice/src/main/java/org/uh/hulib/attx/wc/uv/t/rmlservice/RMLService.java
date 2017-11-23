@@ -50,8 +50,8 @@ import org.uh.hulib.attx.wc.uv.common.MessagingClient;
 import org.uh.hulib.attx.wc.uv.common.RabbitMQClient;
 import org.uh.hulib.attx.wc.uv.common.pojos.ProvenanceMessage;
 import org.uh.hulib.attx.wc.uv.common.pojos.RMLServiceInput;
-import org.uh.hulib.attx.wc.uv.common.pojos.RMLServiceRequest;
-import org.uh.hulib.attx.wc.uv.common.pojos.RMLServiceResponse;
+import org.uh.hulib.attx.wc.uv.common.pojos.RMLServiceRequestMessage;
+import org.uh.hulib.attx.wc.uv.common.pojos.RMLServiceResponseMessage;
 import org.uh.hulib.attx.wc.uv.common.pojos.Source;
 import org.uh.hulib.attx.wc.uv.common.pojos.prov.Activity;
 import org.uh.hulib.attx.wc.uv.common.pojos.prov.Agent;
@@ -149,23 +149,23 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                         files.add(s);
                     }
                     log.info("Read uri inputs");
-                    RMLServiceRequest request = new RMLServiceRequest();
+                    RMLServiceRequestMessage request = new RMLServiceRequestMessage();
                     Provenance requestProv = new Provenance();
                     requestProv.setContext(getProvenanceContext());
                     request.setProvenance(requestProv);
                     RMLServiceInput requestInput = new RMLServiceInput();
-                    requestInput.setMapping(config.getConfiguration());
+                    requestInput.setRmlMapping(config.getConfiguration());
                     requestInput.setSourceData(files);
                     request.setPayload(requestInput);
                     String requestStr = mapper.writeValueAsString(request);
                     log.info(requestStr);
-                    String responseText = mq.sendSyncServiceMessage(requestStr, "rmlservice", 10000);
+                    String responseText = mq.sendSyncServiceMessage(requestStr, "rmlservice", 60000);
                     if (responseText == null) {
                         throw new Exception("No response from service!");
                     }
 
                     log.info(responseText);
-                    RMLServiceResponse response = mapper.readValue(responseText, RMLServiceResponse.class);
+                    RMLServiceResponseMessage response = mapper.readValue(responseText, RMLServiceResponseMessage.class);
                     if (!response.getPayload().getStatus().equals("SUCCESS")) {
                         throw new Exception("Transformation failed. " + response.getPayload().getStatusMessage());
                     }
@@ -183,7 +183,7 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
 
                     rdfData.setOutput(entry);
 
-                    for(String uri : response.getPayload().getTransformedDatasetURIs()) {
+                    for(String uri : response.getPayload().getRMLServiceOutput().getOutput()) {
                         final EntityBuilder datasetUriEntity = new EntityBuilder(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/RMLService"), vf);
                         datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"), vf.createURI(uri));
                         rdfData.add(datasetUriEntity.asStatements());

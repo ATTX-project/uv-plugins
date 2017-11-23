@@ -88,11 +88,9 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
                 IndexServiceRequestMessage req = new IndexServiceRequestMessage();
                 
                 IndexServiceInput input = new IndexServiceInput();
-                input.setActivity("replace");
                 input.setTargetAlias(new ArrayList<String>());
                 input.getTargetAlias().add(config.getAlias());
                 // TODO: fix this
-                input.setUseBulk(true);
                 input.setSourceData(new ArrayList());
                 
                 for (FilesDataUnit.Entry entry : fileEntries) {
@@ -103,6 +101,8 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
                             Source source = new Source();
                             source.setInputType("URI");
                             source.setInput(entry.getFileURIString());
+                            source.setUseBulk(true);
+
                             //source.setDocType(docType);                            
                             input.getSourceData().add(source);
                     //    }                            
@@ -122,7 +122,7 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
                 
                 IndexServiceResponseMessage response = mapper.readValue(responseStr, IndexServiceResponseMessage.class);
                 
-                if(response.getPayload().getIndexingServiceOutput().equalsIgnoreCase("success")) {
+                if(response.getPayload().getStatus().equalsIgnoreCase("success")) {
                     ContextUtils.sendShortInfo(ctx, "Indexing successful");        
                 }
                 else {
