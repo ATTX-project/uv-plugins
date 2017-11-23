@@ -27,27 +27,10 @@ public class IndexServiceResponseMessage extends AbstractMessage {
        this.payload = payload;
     } 
     
-    public class IndexServiceResponsePayload {
+    public class IndexServiceResponsePayload extends BasicPayload {
 
         public IndexServiceResponsePayload() {
         }
 
-        @JsonInclude(JsonInclude.Include.NON_NULL)
-        @JsonPropertyOrder({
-            "indexingServiceOutput"
-        })
-
-        @JsonProperty("indexingServiceInput")
-        private String indexingServiceOutput;
-
-        @JsonProperty("indexingServiceOutput")
-        public String getIndexingServiceOutput() {
-            return indexingServiceOutput;
-        }
-
-        @JsonProperty("indexingServiceInput")
-        public void setIndexingServiceOutput(String indexingServiceOutput) {
-            this.indexingServiceOutput = indexingServiceOutput;
-        }
     }    
 }

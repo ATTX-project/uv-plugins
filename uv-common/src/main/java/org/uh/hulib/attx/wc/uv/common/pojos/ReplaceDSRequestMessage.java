@@ -18,7 +18,7 @@ import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 
-public class ReplaceDSRequest extends AbstractMessage {
+public class ReplaceDSRequestMessage extends AbstractMessage {
 
     @JsonProperty("payload")
     private ReplaceDSRequestPayload payload;
@@ -34,28 +34,11 @@ public class ReplaceDSRequest extends AbstractMessage {
     }    
     
     
-    public class ReplaceDSRequestPayload {
+    public class ReplaceDSRequestPayload extends BasicPayload {
 
         public ReplaceDSRequestPayload() {
         }
 
-        @JsonInclude(JsonInclude.Include.NON_NULL)
-        @JsonPropertyOrder({
-            "graphManagerInput"
-        })
-
-        @JsonProperty("graphManagerInput")
-        private GraphManagerInput graphManagerInput;
-
-        @JsonProperty("graphManagerInput")
-        public GraphManagerInput getGraphManagerInput() {
-            return graphManagerInput;
-        }
-
-        @JsonProperty("graphManagerInput")
-        public void setGraphManagerInput(GraphManagerInput graphManagerInput) {
-            this.graphManagerInput = graphManagerInput;
-        }
     }
 
     

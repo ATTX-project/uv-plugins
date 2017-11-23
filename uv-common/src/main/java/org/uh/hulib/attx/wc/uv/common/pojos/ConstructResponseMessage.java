@@ -25,21 +25,21 @@ public class ConstructResponseMessage extends AbstractMessage {
        this.payload = payload;
     } 
 
-    public class ConstructResponseMessagePayload {
+    public class ConstructResponseMessagePayload extends BasicPayload {
 
         public ConstructResponseMessagePayload() {
         }
         
         @JsonProperty("graphManagerOutput")
-        private GraphManagerQueryOutput graphManagerConstructOutput;
+        private String graphManagerConstructOutput;
 
         @JsonProperty("graphManagerOutput")
-        public GraphManagerQueryOutput getGraphManagerOutput() {
+        public String getGraphManagerOutput() {
             return graphManagerConstructOutput;
         }
 
         @JsonProperty("graphManagerOutput")
-        public void setGraphManagerOutput(GraphManagerQueryOutput graphManagerConstructOutput) {
+        public void setGraphManagerOutput(String graphManagerConstructOutput) {
             this.graphManagerConstructOutput = graphManagerConstructOutput;
         }
     }    

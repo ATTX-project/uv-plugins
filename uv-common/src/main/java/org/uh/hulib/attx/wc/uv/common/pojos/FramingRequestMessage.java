@@ -26,7 +26,7 @@ public class FramingRequestMessage extends AbstractMessage {
        this.payload = payload;
     } 
 
-    public class FramingRequestMessagePayload {
+    public class FramingRequestMessagePayload extends BasicPayload {
 
         public FramingRequestMessagePayload() {
         }

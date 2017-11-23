@@ -17,35 +17,35 @@ public class GraphManagerQueryInput {
  
     public GraphManagerQueryInput() {}
     
-    @JsonProperty("activity")
-    private String activity;
-    @JsonProperty("contentType")
-    private String contentType;
+    @JsonProperty("task")
+    private String task;
+    @JsonProperty("outputContentType")
+    private String outputContentType;
     @JsonProperty("outputType")
     private String outputType;
-    @JsonProperty("sourceGraphs")
-    private List<String> sourceGraphs = new ArrayList<String>();
+    @JsonProperty("sourceGraph")
+    private List<String> sourceGraph = new ArrayList<String>();
     @JsonProperty("input")
     private String input;
     
-    @JsonProperty("activity")
-    public String getActivity() {
-        return activity;
+    @JsonProperty("task")
+    public String getTask() {
+        return task;
     }
 
-    @JsonProperty("activity")
-    public void setActivity(String activity) {
-        this.activity = activity;
+    @JsonProperty("task")
+    public void setTask(String task) {
+        this.task = task;
     }
     
-   @JsonProperty("contentType")
-    public String getContentType() {
-        return contentType;
+   @JsonProperty("outputContentType")
+    public String getOutputContentType() {
+        return outputContentType;
     }
 
-    @JsonProperty("contentType")
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
+    @JsonProperty("outputContentType")
+    public void setOutputContentType(String outputContentType) {
+        this.outputContentType = outputContentType;
     }
         
    @JsonProperty("outputType")
@@ -58,14 +58,14 @@ public class GraphManagerQueryInput {
         this.outputType = outputType;
     }    
     
-    @JsonProperty("sourceGraphs")
-    public List<String> getSourceGraphs() {
-        return sourceGraphs;
+    @JsonProperty("sourceGraph")
+    public List<String> getSourceGraph() {
+        return sourceGraph;
     }
 
-    @JsonProperty("sourceGraphs")
-    public void setSourceGraphs(List<String> sourceGraphs) {
-        this.sourceGraphs = sourceGraphs;
+    @JsonProperty("sourceGraph")
+    public void setSourceGraph(List<String> sourceGraph) {
+        this.sourceGraph = sourceGraph;
     }
     
    @JsonProperty("input")

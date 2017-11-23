@@ -12,7 +12,7 @@ import java.util.List;
  *
  * @author jkesanie
  */
-public class FramingServiceOutput extends AbstractServiceOutput {
+public class FramingServiceOutput {
     @JsonProperty("contentType")
     private String contentType;
     @JsonProperty("outputType")

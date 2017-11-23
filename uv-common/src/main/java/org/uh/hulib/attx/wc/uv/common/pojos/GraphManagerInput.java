@@ -18,8 +18,8 @@ public class GraphManagerInput {
     public GraphManagerInput() {
     }
 
-    @JsonProperty("activity")
-    private String activity;
+    @JsonProperty("task")
+    private String task;
     @JsonProperty("targetGraph")
     private String targetGraph;
     @JsonProperty("sourceData")
@@ -27,14 +27,14 @@ public class GraphManagerInput {
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
-    @JsonProperty("activity")
-    public String getActivity() {
-        return activity;
+    @JsonProperty("task")
+    public String getTask() {
+        return task;
     }
 
-    @JsonProperty("activity")
-    public void setActivity(String activity) {
-        this.activity = activity;
+    @JsonProperty("task")
+    public void setTask(String task) {
+        this.task = task;
     }
 
     @JsonProperty("targetGraph")

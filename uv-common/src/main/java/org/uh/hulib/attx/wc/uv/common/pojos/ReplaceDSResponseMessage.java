@@ -16,7 +16,7 @@ import java.util.Map;
 import org.uh.hulib.attx.wc.uv.common.pojos.prov.Provenance;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ReplaceDSResponse extends AbstractMessage {
+public class ReplaceDSResponseMessage extends AbstractMessage {
 
     @JsonProperty("payload")
     private ReplaceDSResponsePayload payload;
@@ -32,29 +32,13 @@ public class ReplaceDSResponse extends AbstractMessage {
     }
 
 
-    public class ReplaceDSResponsePayload {
+    public class ReplaceDSResponsePayload extends BasicPayload {
 
         public ReplaceDSResponsePayload() {
 
         }
 
-        @JsonInclude(JsonInclude.Include.NON_NULL)
-        @JsonPropertyOrder({
-            "graphManagerOutput"
-        })
 
-        @JsonProperty("graphManagerOutput")
-        private GraphManagerOutput graphManagerOutput;
-
-        @JsonProperty("graphManagerOutput")
-        public GraphManagerOutput getGraphManagerOutput() {
-            return graphManagerOutput;
-        }
-
-        @JsonProperty("graphManagerOutput")
-        public void setGraphManagerOutput(GraphManagerOutput graphManagerOutput) {
-            this.graphManagerOutput = graphManagerOutput;
-        }
     }
 
 

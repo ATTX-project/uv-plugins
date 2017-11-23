@@ -27,7 +27,7 @@ public class IndexServiceRequestMessage extends AbstractMessage {
        this.payload = payload;
     } 
     
-    public class IndexServiceRequestPayload {
+    public class IndexServiceRequestPayload extends BasicPayload {
 
         public IndexServiceRequestPayload() {
         }

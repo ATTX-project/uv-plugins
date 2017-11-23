@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class RMLServiceRequest extends AbstractMessage {
+public class RMLServiceRequestMessage extends AbstractMessage {
 
     @JsonProperty("payload")
     private RMLServiceInput payload;
@@ -25,7 +25,7 @@ public class RMLServiceRequest extends AbstractMessage {
         this.payload = payload;
     }
     
-    public class RMLServiceRequestPayload {
+    public class RMLServiceRequestPayload extends BasicPayload {
 
         public RMLServiceRequestPayload() {
         }

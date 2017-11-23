@@ -5,13 +5,8 @@
  */
 package org.uh.hulib.attx.wc.uv.common.pojos;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -20,15 +15,10 @@ import java.util.Map;
 public class RMLServiceOutput {
     @JsonProperty("contentType")
     private String contentType;    
-    @JsonProperty("status")
-    private String status;
-    @JsonProperty("statusMessage")
-    private String statusMessage;
-
-    @JsonProperty("transformedDatasetURIs")
-    private List<String> transformedDatasetURIs;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    @JsonProperty("outputType")
+    private String outputType;
+    @JsonProperty("output")
+    private List<String> output;
 
     @JsonProperty("contentType")
     public String getContentType() {
@@ -40,43 +30,25 @@ public class RMLServiceOutput {
         this.contentType = contentType;
     }    
     
-    @JsonProperty("status")
-    public String getStatus() {
-        return status;
+    @JsonProperty("outputType")
+    public String getOutputType() {
+        return outputType;
     }
 
-    @JsonProperty("status")
-    public void setStatus(String status) {
-        this.status = status;
+    @JsonProperty("outputType")
+    public void setOutputType(String outputType) {
+        this.outputType = outputType;
     }
 
-    @JsonProperty("statusMessage")
-    public String getStatusMessage() {
-        return statusMessage;
-    }
-
-    @JsonProperty("statusMessage")
-    public void setStatusMessage(String statusMessage) {
-        this.statusMessage = statusMessage;    
-    }
     
-    @JsonProperty("transformedDatasetURIs")
-    public List<String> getTransformedDatasetURIs() {
-        return transformedDatasetURIs;
+    @JsonProperty("output")
+    public List<String> getOutput() {
+        return output;
     }
 
-    @JsonProperty("transformedDatasetURIs")
-    public void setTransformedDatasetURIs(List<String> transformedDatasetURIs) {
-        this.transformedDatasetURIs = transformedDatasetURIs;
+    @JsonProperty("output")
+    public void setOutput(List<String> output) {
+        this.output = output;
     }
-
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }   
+ 
 }

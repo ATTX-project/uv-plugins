@@ -23,24 +23,10 @@ import java.util.List;
 })
 public class IndexServiceInput {
 
-    @JsonProperty("activity")
-    private String activity;
     @JsonProperty("targetAlias")
     private List<String> targetAlias = null;
-    @JsonProperty("useBulk")
-    private Boolean useBulk;
     @JsonProperty("sourceData")
     private List<Source> sourceData = null;
-
-    @JsonProperty("activity")
-    public String getActivity() {
-        return activity;
-    }
-
-    @JsonProperty("activity")
-    public void setActivity(String activity) {
-        this.activity = activity;
-    }
 
     @JsonProperty("targetAlias")
     public List<String> getTargetAlias() {
@@ -50,16 +36,6 @@ public class IndexServiceInput {
     @JsonProperty("targetAlias")
     public void setTargetAlias(List<String> targetAlias) {
         this.targetAlias = targetAlias;
-    }
-
-    @JsonProperty("useBulk")
-    public Boolean getUseBulk() {
-        return useBulk;
-    }
-
-    @JsonProperty("useBulk")
-    public void setUseBulk(Boolean useBulk) {
-        this.useBulk = useBulk;
     }
 
     @JsonProperty("sourceData")

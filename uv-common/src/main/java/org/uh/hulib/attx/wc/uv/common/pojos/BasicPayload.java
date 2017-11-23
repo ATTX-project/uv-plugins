@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  * @author jkesanie
  */
-public abstract class AbstractServiceOutput {
+public class BasicPayload {
     
     @JsonProperty("status")
     private String status;

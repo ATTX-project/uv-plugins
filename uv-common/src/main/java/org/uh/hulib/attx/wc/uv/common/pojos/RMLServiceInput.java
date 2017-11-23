@@ -18,22 +18,22 @@ import java.util.Map;
  * @author jkesanie
  */
 public class RMLServiceInput {
-        @JsonProperty("mapping")
-        private String mapping;
+        @JsonProperty("rmlMapping")
+        private String rmlMapping;
         @JsonProperty("sourceData")
         private List<Source> sourceData = null;
         
         @JsonIgnore
         private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
-        @JsonProperty("mapping")
-        public String getMapping() {
-            return mapping;
+        @JsonProperty("rmlMapping")
+        public String getRmlMapping() {
+            return rmlMapping;
         }
 
-        @JsonProperty("mapping")
-        public void setMapping(String mapping) {
-            this.mapping = mapping;
+        @JsonProperty("rmlMapping")
+        public void setRmlMapping(String rmlMapping) {
+            this.rmlMapping = rmlMapping;
         }
         @JsonProperty("sourceData")
         public List<Source> getSourceData() {
