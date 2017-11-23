@@ -184,8 +184,11 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                     rdfData.setOutput(entry);
 
                     for(String uri : response.getPayload().getRMLServiceOutput().getOutput()) {
-                        final EntityBuilder datasetUriEntity = new EntityBuilder(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/RMLService"), vf);
+                        final EntityBuilder datasetUriEntity = new EntityBuilder(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/RMLService"), vf);                        
                         datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"), vf.createURI(uri));
+                        String contentType = response.getPayload().getRMLServiceOutput().getContentType();
+                        datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileContentType"), vf.createLiteral(contentType));
+                        
                         rdfData.add(datasetUriEntity.asStatements());
                     }
                     
