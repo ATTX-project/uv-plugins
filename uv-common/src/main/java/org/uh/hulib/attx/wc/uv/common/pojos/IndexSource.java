@@ -11,8 +11,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  * @author jkesanie
  */
-public class Source {
+public class IndexSource {
 
+    @JsonProperty("useBulk")
+    private Boolean useBulk;
+    @JsonProperty("docType")
+    private String docType;
     @JsonProperty("contentType")
     private String contentType;
     @JsonProperty("inputType")
@@ -20,6 +24,25 @@ public class Source {
     @JsonProperty("input")
     private String input;
 
+    @JsonProperty("useBulk")
+    public Boolean getUseBulk() {
+        return useBulk;
+    }
+
+    @JsonProperty("useBulk")
+    public void setUseBulk(Boolean useBulk) {
+        this.useBulk = useBulk;
+    }    
+    
+    @JsonProperty("docType")
+    public String getDocType() {
+        return docType;
+    }
+
+    @JsonProperty("docType")
+    public void setDocType(String docType) {
+        this.docType = docType;
+    }
     
     @JsonProperty("contentType")
     public String getContentType() {

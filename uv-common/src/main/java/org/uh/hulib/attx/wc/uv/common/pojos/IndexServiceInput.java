@@ -14,19 +14,12 @@ import java.util.List;
  *
  * @author jkesanie
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "activity",
-    "targetAlias",
-    "useBulk",
-    "sourceData"
-})
 public class IndexServiceInput {
 
     @JsonProperty("targetAlias")
     private List<String> targetAlias = null;
     @JsonProperty("sourceData")
-    private List<Source> sourceData = null;
+    private List<IndexSource> sourceData = null;
 
     @JsonProperty("targetAlias")
     public List<String> getTargetAlias() {
@@ -39,12 +32,12 @@ public class IndexServiceInput {
     }
 
     @JsonProperty("sourceData")
-    public List<Source> getSourceData() {
+    public List<IndexSource> getSourceData() {
         return sourceData;
     }
 
     @JsonProperty("sourceData")
-    public void setSourceData(List<Source> sourceData) {
+    public void setSourceData(List<IndexSource> sourceData) {
         this.sourceData = sourceData;
     }
 

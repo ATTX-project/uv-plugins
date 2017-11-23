@@ -25,7 +25,7 @@ public class RMLServiceRequestMessage extends AbstractMessage {
         this.payload = payload;
     }
     
-    public class RMLServiceRequestPayload extends BasicPayload {
+    public class RMLServiceRequestPayload {
 
         public RMLServiceRequestPayload() {
         }

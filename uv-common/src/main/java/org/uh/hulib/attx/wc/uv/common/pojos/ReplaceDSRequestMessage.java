@@ -34,7 +34,7 @@ public class ReplaceDSRequestMessage extends AbstractMessage {
     }    
     
     
-    public class ReplaceDSRequestPayload extends BasicPayload {
+    public class ReplaceDSRequestPayload {
 
         public ReplaceDSRequestPayload() {
         }
