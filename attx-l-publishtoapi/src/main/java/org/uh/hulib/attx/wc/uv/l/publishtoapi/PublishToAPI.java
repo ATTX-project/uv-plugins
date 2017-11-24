@@ -39,6 +39,7 @@ import org.uh.hulib.attx.wc.uv.common.RabbitMQClient;
 import org.uh.hulib.attx.wc.uv.common.pojos.IndexServiceInput;
 import org.uh.hulib.attx.wc.uv.common.pojos.IndexServiceRequestMessage;
 import org.uh.hulib.attx.wc.uv.common.pojos.IndexServiceResponseMessage;
+import org.uh.hulib.attx.wc.uv.common.pojos.IndexSource;
 import org.uh.hulib.attx.wc.uv.common.pojos.Source;
 import org.uh.hulib.attx.wc.uv.common.pojos.prov.Activity;
 import org.uh.hulib.attx.wc.uv.common.pojos.prov.Agent;
@@ -61,9 +62,13 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
     private long stepID;
     private ObjectMapper mapper = new ObjectMapper();
 
-    @DataUnit.AsInput(name = "framedDocuments", optional = false)
-    public FilesDataUnit framedDocuments;
+//    @DataUnit.AsInput(name = "fileInput", optional = true)
+//    public FilesDataUnit fileInput;
 
+    @DataUnit.AsInput(name = "uriInput", optional = false)
+    public RDFDataUnit uriInput;
+    
+    
     public PublishToAPI() {
         super(PublishToAPIVaadinDialog.class, ConfigHistory.noHistory(PublishToAPIConfig_V1.class));
     }
@@ -79,12 +84,12 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
         RabbitMQClient mq = null;
         try {
             mq = new RabbitMQClient("messagebroker", System.getenv("MUSER"), System.getenv("MPASS"), "provenance.inbox");
-            c = this.framedDocuments.getConnection();
+            c = this.uriInput.getConnection();
             
-            Set<FilesDataUnit.Entry> fileEntries = FilesHelper.getFiles(framedDocuments);
-            System.out.println("framerEntries size:" + fileEntries.size());
+            org.openrdf.model.URI[] uriEntries = RDFHelper.getGraphsURIArray(uriInput);
+            System.out.println("framerEntries size:" + uriEntries.length);
             
-            if(fileEntries.size() > 0) {
+            if(uriEntries.length > 0) {
                 IndexServiceRequestMessage req = new IndexServiceRequestMessage();
                 
                 IndexServiceInput input = new IndexServiceInput();
@@ -93,23 +98,29 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
                 // TODO: fix this
                 input.setSourceData(new ArrayList());
                 
-                for (FilesDataUnit.Entry entry : fileEntries) {
-                    //writeGraph(c, graphURI, System.out);
-                    //String inputURI = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
-                    //String docType = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/docType"));
-                    //if (inputURI != null) {
-                            Source source = new Source();
-                            source.setInputType("URI");
-                            source.setInput(entry.getFileURIString());
-                            source.setUseBulk(true);
+                for (org.openrdf.model.URI graphURI : uriEntries) {
+                    writeGraph(c, graphURI, System.out);
+                    String inputURI = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
+                    String contentType = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileContentType"));
+                    String docType = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/docType"));
 
-                            //source.setDocType(docType);                            
-                            input.getSourceData().add(source);
-                    //    }                            
+                    IndexSource source = new IndexSource();
+                    source.setInputType("URI");
+                    source.setInput(inputURI);
+                    source.setUseBulk(true);
+                    source.setContentType(contentType);
+                    source.setDocType(docType);                            
+                    input.getSourceData().add(source);
                 }
+
+                input.setTask("replace");
 
                 req.setProvenance(new Provenance());
                 req.getProvenance().setContext(getProvenanceContext());
+                
+                IndexServiceRequestMessage.IndexServiceRequestPayload p = req.new IndexServiceRequestPayload();
+                p.setGraphManagerInput(input);
+                req.setPayload(p);
                 
                 String requestStr = mapper.writeValueAsString(req);
                 log.info(requestStr);
