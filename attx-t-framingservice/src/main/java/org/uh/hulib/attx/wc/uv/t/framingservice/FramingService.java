@@ -128,7 +128,7 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
             if (fileEntries.size() > 0 || uriEntries.length > 0) {
                 System.out.println("- RML conf:");
                 System.out.println(config.getConfiguration());
-
+                System.out.println("URIs:" + uriEntries.length);
                 mq = new RabbitMQClient("messagebroker", System.getenv("MUSER"), System.getenv("MPASS"), "provenance.inbox");
                 ObjectMapper mapper = new ObjectMapper();
                 Provenance prov = getProv();
@@ -144,9 +144,12 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
                     log.info("Read data inputs");
                     for (org.openrdf.model.URI graphURI : uriEntries) {
                         String inputURI = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
+                        String contentType = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileContentType"));
+                        
                         Source s = new Source();
                         s.setInputType("URI");
                         s.setInput(inputURI);
+                        s.setContentType(contentType);
                         files.add(s);
                     }
                     log.info("Read uri inputs");
@@ -156,8 +159,10 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
                     request.setProvenance(requestProv);
                     FramingServiceInput requestInput = new FramingServiceInput();
                     requestInput.setDocType(config.getDocType());
+                    
                     requestInput.setLdFrame(config.getConfiguration());
                     requestInput.setSourceData(files);
+                    
                     
                     FramingRequestMessage.FramingRequestMessagePayload p = request.new FramingRequestMessagePayload();                    
                     p.setGraphManagerInput(requestInput);
@@ -190,11 +195,16 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
                     fileData.setOutput(entry);
 
                     String resultURI = response.getPayload().getFramingServiceOutput().getOutput();
+                    if(!resultURI.startsWith("file://")) {
+                        resultURI = "file://" + resultURI;
+                    }
+                    
                     String contentType = response.getPayload().getFramingServiceOutput().getContentType();
                     // TODO: what if the the result type if data?
                     final EntityBuilder datasetUriEntity = new EntityBuilder(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/FramingService"), vf);
                     datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"), vf.createURI(resultURI));
                     datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileContentType"), vf.createLiteral(contentType));
+                    datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/docType"), vf.createLiteral(config.getDocType()));
 
                     fileData.add(datasetUriEntity.asStatements());
                     
