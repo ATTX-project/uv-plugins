@@ -151,7 +151,7 @@ public class Construct extends AbstractDpu<ConstructConfig_V1> {
                     requestInput.setTask("construct");
                     requestInput.setOutputContentType("text/turtle");
                     requestInput.setOutputType("URI");
-                    requestInput.setSourceGraph(sourceGraphs);
+                    requestInput.setSourceGraphs(sourceGraphs);
                     
                     ConstructRequestMessage.ConstructRequestMessagePayload p = request.new ConstructRequestMessagePayload();                    
                     p.setGraphManagerInput(requestInput);
