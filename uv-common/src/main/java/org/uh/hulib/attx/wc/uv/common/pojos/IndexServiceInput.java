@@ -16,11 +16,23 @@ import java.util.List;
  */
 public class IndexServiceInput {
 
+    @JsonProperty("task")
+    private String task;
     @JsonProperty("targetAlias")
     private List<String> targetAlias = null;
     @JsonProperty("sourceData")
     private List<IndexSource> sourceData = null;
 
+    @JsonProperty("task")
+    public String getTask() {
+        return task;
+    }
+
+    @JsonProperty("task")
+    public void setTask(String task) {
+        this.task = task;
+    }
+    
     @JsonProperty("targetAlias")
     public List<String> getTargetAlias() {
         return targetAlias;
