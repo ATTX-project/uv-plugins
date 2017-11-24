@@ -23,8 +23,8 @@ public class GraphManagerQueryInput {
     private String outputContentType;
     @JsonProperty("outputType")
     private String outputType;
-    @JsonProperty("sourceGraph")
-    private List<String> sourceGraph = new ArrayList<String>();
+    @JsonProperty("sourceGraphs")
+    private List<String> sourceGraphs = new ArrayList<String>();
     @JsonProperty("input")
     private String input;
     
@@ -58,14 +58,14 @@ public class GraphManagerQueryInput {
         this.outputType = outputType;
     }    
     
-    @JsonProperty("sourceGraph")
-    public List<String> getSourceGraph() {
-        return sourceGraph;
+    @JsonProperty("sourceGraphs")
+    public List<String> getSourceGraphs() {
+        return sourceGraphs;
     }
 
-    @JsonProperty("sourceGraph")
-    public void setSourceGraph(List<String> sourceGraph) {
-        this.sourceGraph = sourceGraph;
+    @JsonProperty("sourceGraphs")
+    public void setSourceGraphs(List<String> sourceGraphs) {
+        this.sourceGraphs = sourceGraphs;
     }
     
    @JsonProperty("input")
