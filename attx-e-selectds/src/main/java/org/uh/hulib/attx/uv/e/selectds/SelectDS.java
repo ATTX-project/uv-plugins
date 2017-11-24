@@ -73,7 +73,7 @@ public class SelectDS extends AbstractDpu<SelectDSConfig_V1> {
                 rdfData.add(targetDataset.asStatements());
             }
             rdfData.flushBuffer();
-            writeGraph(outRdfData.getConnection(), entry.getDataGraphURI(), System.out);
+            //writeGraph(outRdfData.getConnection(), entry.getDataGraphURI(), System.out);
             ContextUtils.sendShortInfo(ctx, "Data set metadata created");
             
         }catch(Exception ex) {
