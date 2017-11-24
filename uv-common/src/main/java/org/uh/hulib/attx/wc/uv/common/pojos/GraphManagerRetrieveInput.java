@@ -19,7 +19,7 @@ public class GraphManagerRetrieveInput {
     }
 
     @JsonProperty("task")
-    private String task = "retrive";
+    private String task = "retrieve";
     @JsonProperty("outputContentType")
     private String outputContentType;
     @JsonProperty("outputType")
