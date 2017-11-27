@@ -182,7 +182,7 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
                     if (!response.getPayload().getStatus().equalsIgnoreCase("success")) {
                         throw new Exception("Transformation failed. " + response.getPayload().getStatusMessage());
                     }
-                    prov.getActivity().setStatus("SUCCESS");
+                    prov.getActivity().setStatus("success");
                     ProvenanceMessage provMsg = new ProvenanceMessage();
                     provMsg.setProvenance(prov);
                     mq.sendProvMessage(mapper.writeValueAsString(provMsg));
@@ -245,26 +245,27 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
         Context provContext = getProvenanceContext();
 
         Agent provAgent = new Agent();
-        provAgent.setID("UV");
+        provAgent.setID("UnifiedViews");
         provAgent.setRole("ETL");
 
         Activity provAct = new Activity();
-        provAct.setTitle("Transform to RDF");
+        provAct.setTitle("Framing rdf");
         provAct.setType("StepExecution");
 
         Communication provCom = new Communication();
-        provCom.setRole("transformer");
-        provCom.setAgent("RMLService");
+        provCom.setRole("LDframe");
+        provCom.setAgent("GraphFraming");
         provCom.setInput(new ArrayList<DataProperty>());
 
         provAct.setCommunication(new ArrayList<Communication>());
         provAct.getCommunication().add(provCom);
 
         DataProperty provInput = new DataProperty();
-        provInput.setKey("harvestedContent");
+        provInput.setKey("framingServiceInput");
+        provInput.setRole("Dataset");
         DataProperty provOutput = new DataProperty();
-        provOutput.setKey("transformerData");
-        provOutput.setRole("tempDataset");
+        provOutput.setKey("framingServiceOutput");
+        provOutput.setRole("Dataset");
 
         provContent.setContext(provContext);
         provContent.setAgent(provAgent);

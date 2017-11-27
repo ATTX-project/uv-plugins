@@ -170,7 +170,7 @@ public class RetrieveDS extends AbstractDpu<RetrieveDSConfig_V1> {
                     if (!response.getPayload().getStatus().equalsIgnoreCase("success")) {
                         throw new Exception("Retrieve DS failed. " + response.getPayload().getStatusMessage());
                     }
-                    prov.getActivity().setStatus("SUCCESS");
+                    prov.getActivity().setStatus("success");
 
                     ProvenanceMessage provMsg = new ProvenanceMessage();
                     provMsg.setProvenance(prov);
@@ -231,26 +231,27 @@ public class RetrieveDS extends AbstractDpu<RetrieveDSConfig_V1> {
         Context provContext = getProvenanceContext();
 
         Agent provAgent = new Agent();
-        provAgent.setID("UV");
+        provAgent.setID("UnifiedViews");
         provAgent.setRole("ETL");
 
         Activity provAct = new Activity();
-        provAct.setTitle("Transform to RDF");
+        provAct.setTitle("Retrieve DS");
         provAct.setType("StepExecution");
 
         Communication provCom = new Communication();
-        provCom.setRole("transformer");
-        provCom.setAgent("RMLService");
+        provCom.setRole("storage");
+        provCom.setAgent("GraphManager");
         provCom.setInput(new ArrayList<DataProperty>());
 
         provAct.setCommunication(new ArrayList<Communication>());
         provAct.getCommunication().add(provCom);
 
         DataProperty provInput = new DataProperty();
-        provInput.setKey("harvestedContent");
+        provInput.setKey("graphManagerInput");
+        provInput.setRole("Dataset");
         DataProperty provOutput = new DataProperty();
-        provOutput.setKey("transformerData");
-        provOutput.setRole("tempDataset");
+        provOutput.setKey("graphManagerOutput");
+        provOutput.setRole("Dataset");
 
         provContent.setContext(provContext);
         provContent.setAgent(provAgent);

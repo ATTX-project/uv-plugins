@@ -232,7 +232,7 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
         Provenance provContent = new Provenance();
         
         Agent provAgent = new Agent();
-        provAgent.setID("UV");
+        provAgent.setID("UnifiedViews");
         provAgent.setRole("ETL");
 
         Activity provAct = new Activity();
@@ -240,20 +240,20 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
         provAct.setType("StepExecution");
 
         Communication provCom = new Communication();
-        provCom.setRole("indexservice");
-        provCom.setAgent("indexservice");
+        provCom.setRole("index");
+        provCom.setAgent("IndexingService");
         provCom.setInput(new ArrayList<DataProperty>());
         DataProperty comInput = new DataProperty();
         comInput.setKey("indexingServiceInput");
-        comInput.setRole("unknown");
+        comInput.setRole("Dataset");
         provCom.getInput().add(comInput);
         
         provAct.setCommunication(new ArrayList<Communication>());
         provAct.getCommunication().add(provCom);
 
         DataProperty provInput = new DataProperty();
-        provInput.setKey("transformerData");
-        provInput.setRole("tempDataset");
+        provInput.setKey("indexingServiceOutput");
+        provInput.setRole("Dataset");
         
         DataProperty provOutput = new DataProperty();
         provOutput.setKey("outputDataset");

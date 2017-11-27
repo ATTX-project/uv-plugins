@@ -32,9 +32,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import org.apache.commons.io.FileUtils;
@@ -101,6 +103,50 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
         return ctx;
     }
 
+    private void addInputs(RepositoryConnection c, ProvenanceMessage msg, org.openrdf.model.URI[] uriEntries, Set<FilesDataUnit.Entry> fileEntries) throws Exception {
+        Map<String, Object> payload = msg.getPayload();
+        if(payload == null) {
+            payload = new HashMap<String, Object>();
+        }
+        Provenance prov = msg.getProvenance();
+        if(prov == null) {
+            throw new Exception("Provenance needs to be set before calling addInputsAndOutputs");
+        }
+
+
+        int p = 0;
+        // URI inputs 
+        prov.setInput(new ArrayList<DataProperty>());        
+        if (uriEntries.length > 0) {
+            for(int i = 0; i < uriEntries.length; i++) {
+                org.openrdf.model.URI g = uriEntries[i];  
+                String inputURI = getSinglePropertyValue(c, g, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
+                  
+                DataProperty input = new DataProperty();
+                input.setKey("inputDataset" + p);
+                input.setRole("Dataset");
+                prov.getInput().add(input);                
+                payload.put("inputDataset" + p, inputURI);                
+                p++;
+            }
+        } 
+        
+        // file inputs
+        Iterator<FilesDataUnit.Entry> fileIterator = fileEntries.iterator();
+        while (fileIterator.hasNext()) {
+            DataProperty input = new DataProperty();
+            input.setKey("inputDataset" + p);
+            input.setRole("Dataset");
+            prov.getInput().add(input);                
+            payload.put("inputDataset" + p, fileIterator.next().getFileURIString());                
+            p++;
+        }        
+        
+        
+        msg.setPayload(payload);
+        
+    }
+    
     @Override
     protected void innerExecute() throws DPUException {
 
@@ -130,6 +176,8 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                 mq = new RabbitMQClient("messagebroker", System.getenv("MUSER"), System.getenv("MPASS"), "provenance.inbox");
                 ObjectMapper mapper = new ObjectMapper();
                 Provenance prov = getProv();
+                Map<String, Object> provPayload = new HashMap<String, Object>();
+
                 List<Source> files = new ArrayList<Source>();
                 try {
                     Iterator<FilesDataUnit.Entry> fileIterator = fileEntries.iterator();
@@ -169,11 +217,9 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                     if (!response.getPayload().getStatus().equals("SUCCESS")) {
                         throw new Exception("Transformation failed. " + response.getPayload().getStatusMessage());
                     }
-                    prov.getActivity().setStatus("SUCCESS");
+                    prov.getActivity().setStatus("success");
+                    prov.setOutput(new ArrayList<DataProperty>());                
 
-                    ProvenanceMessage provMsg = new ProvenanceMessage();
-                    provMsg.setProvenance(prov);
-                    mq.sendProvMessage(mapper.writeValueAsString(provMsg));
 
                     final ValueFactory vf = rdfData.getValueFactory();
                     // entry is the graph 
@@ -183,6 +229,7 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
 
                     rdfData.setOutput(entry);
 
+                    int i = 0;
                     for(String uri : response.getPayload().getRMLServiceOutput().getOutput()) {
                         final EntityBuilder datasetUriEntity = new EntityBuilder(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/RMLService"), vf);                        
                         datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"), vf.createURI(uri));
@@ -190,8 +237,22 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                         datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileContentType"), vf.createLiteral(contentType));
                         
                         rdfData.add(datasetUriEntity.asStatements());
+                        
+                        DataProperty output = new DataProperty();
+                        output.setKey("outputDataset" + i);
+                        output.setRole("Dataset");            
+                        prov.getOutput().add(output);
+                        provPayload.put("outputDataset" + i, uri);                            
+                        i++;
                     }
                     
+                    ProvenanceMessage provMsg = new ProvenanceMessage();
+                    provMsg.setProvenance(prov);
+                    provMsg.setPayload(provPayload);
+                    addInputs(c, provMsg, uriEntries, fileEntries);
+                    String provStepMessage = mapper.writeValueAsString(provMsg);
+                    log.info(provStepMessage);
+                    mq.sendProvMessage(provStepMessage);
 
 
                 } catch (Exception ex) {
@@ -229,7 +290,7 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
         Context provContext = getProvenanceContext();
 
         Agent provAgent = new Agent();
-        provAgent.setID("UV");
+        provAgent.setID("UnifiedViews");
         provAgent.setRole("ETL");
 
         Activity provAct = new Activity();
@@ -238,25 +299,17 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
 
         Communication provCom = new Communication();
         provCom.setRole("transformer");
-        provCom.setAgent("RMLService");
+        provCom.setAgent("rmlservice");
         provCom.setInput(new ArrayList<DataProperty>());
 
         provAct.setCommunication(new ArrayList<Communication>());
         provAct.getCommunication().add(provCom);
 
-        DataProperty provInput = new DataProperty();
-        provInput.setKey("harvestedContent");
-        DataProperty provOutput = new DataProperty();
-        provOutput.setKey("transformerData");
-        provOutput.setRole("tempDataset");
-
+        
         provContent.setContext(provContext);
-        provContent.setAgent(provAgent);
         provContent.setActivity(provAct);
-        provContent.setInput(new ArrayList());
-        provContent.getInput().add(provInput);
-        provContent.setOutput(new ArrayList());
-        provContent.getOutput().add(provOutput);
+        provContent.setAgent(provAgent);
+        
         return provContent;
     }
 

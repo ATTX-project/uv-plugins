@@ -28,7 +28,9 @@ import eu.unifiedviews.helpers.dpu.rdf.EntityBuilder;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import org.openrdf.model.Statement;
 import org.openrdf.model.ValueFactory;
@@ -129,15 +131,25 @@ public class Construct extends AbstractDpu<ConstructConfig_V1> {
                 mq = new RabbitMQClient("messagebroker", System.getenv("MUSER"), System.getenv("MPASS"), "provenance.inbox");
                 ObjectMapper mapper = new ObjectMapper();
                 Provenance prov = getProv();
+                Map<String, Object> provPayload = new HashMap<String, Object>();
                 List<String> sourceGraphs = new ArrayList<String>();
                 try {
                     log.info("Read data inputs");
+                    prov.setInput(new ArrayList<DataProperty>());
+                    int i = 0;
                     for (org.openrdf.model.URI graphURI : uriEntries) {
                         writeGraph(c, graphURI, System.out);
                         List<String> inputURIs = getAllPropertyValues(c, graphURI, DC.IDENTIFIER);
                         for(String inputURI : inputURIs) {
                             log.info("Adding source: " + inputURI);
                             sourceGraphs.add(inputURI);
+                            
+                            DataProperty input = new DataProperty();
+                            input.setKey("inputDataset" + i);
+                            input.setRole("Dataset");                            
+                            prov.getInput().add(input);
+                            provPayload.put("inputDataset" + i, inputURI);
+                            i++;
                             
                         }
                     }
@@ -160,7 +172,7 @@ public class Construct extends AbstractDpu<ConstructConfig_V1> {
                     
                     String requestStr = mapper.writeValueAsString(request);
                     log.info(requestStr);
-                    String responseText = mq.sendSyncServiceMessage(requestStr, "attx.graphManager.inbox", 10000);
+                    String responseText = mq.sendSyncServiceMessage(requestStr, "attx.graphManager.inbox", 60000);
                     if (responseText == null) {
                         throw new Exception("No response from service!");
                     }
@@ -170,11 +182,19 @@ public class Construct extends AbstractDpu<ConstructConfig_V1> {
 //                    if (!response.getPayload().getStatus().equals("SUCCESS")) {
   //                      throw new Exception("Transformation failed. " + response.getPayload().getStatusMessage());
    //                 }
-                    prov.getActivity().setStatus("SUCCESS");
-
+                    prov.getActivity().setStatus("success");
+                    String outputURI = response.getPayload().getGraphManagerOutput();
+                            DataProperty output = new DataProperty();
+                            output.setKey("outputDataset");
+                            output.setRole("Dataset");                            
+                            provPayload.put("outputDataset", outputURI);
+                    
                     ProvenanceMessage provMsg = new ProvenanceMessage();
                     provMsg.setProvenance(prov);
-                    mq.sendProvMessage(mapper.writeValueAsString(provMsg));
+                    provMsg.setPayload(provPayload);
+                    String provMessageStr = mapper.writeValueAsString(provMsg);
+                    log.info(provMessageStr);
+                    mq.sendProvMessage(provMessageStr);
 
                     final ValueFactory vf = rdfData.getValueFactory();
                     // entry is the graph 
@@ -231,26 +251,27 @@ public class Construct extends AbstractDpu<ConstructConfig_V1> {
         Context provContext = getProvenanceContext();
 
         Agent provAgent = new Agent();
-        provAgent.setID("UV");
+        provAgent.setID("UnifiedViews");
         provAgent.setRole("ETL");
 
         Activity provAct = new Activity();
-        provAct.setTitle("Transform to RDF");
+        provAct.setTitle("grapmanager construct");
         provAct.setType("StepExecution");
 
         Communication provCom = new Communication();
-        provCom.setRole("transformer");
-        provCom.setAgent("RMLService");
+        provCom.setRole("storage");
+        provCom.setAgent("GraphManager");
         provCom.setInput(new ArrayList<DataProperty>());
 
         provAct.setCommunication(new ArrayList<Communication>());
         provAct.getCommunication().add(provCom);
 
         DataProperty provInput = new DataProperty();
-        provInput.setKey("harvestedContent");
+        provInput.setKey("graphManagerInput");
+        provInput.setRole("Dataset");
         DataProperty provOutput = new DataProperty();
-        provOutput.setKey("transformerData");
-        provOutput.setRole("tempDataset");
+        provOutput.setKey("graphManagerOutput");
+        provOutput.setRole("Dataset");
 
         provContent.setContext(provContext);
         provContent.setAgent(provAgent);
