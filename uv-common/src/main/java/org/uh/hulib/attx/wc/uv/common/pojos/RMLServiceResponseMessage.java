@@ -38,7 +38,7 @@ public class RMLServiceResponseMessage extends AbstractMessage {
             return rmlserviceOutput;
         }
 
-        @JsonProperty("graphManagerOutput")
+        @JsonProperty("rmlserviceOutput")
         public void setRMLServiceOutput(RMLServiceOutput rmlserviceOutput) {
             this.rmlserviceOutput = rmlserviceOutput;
         }

@@ -13,15 +13,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class RMLServiceRequestMessage extends AbstractMessage {
 
     @JsonProperty("payload")
-    private RMLServiceInput payload;
+    private RMLServiceRequestPayload payload;
 
     @JsonProperty("payload")
-    public RMLServiceInput getPayload() {
+    public RMLServiceRequestPayload getPayload() {
         return this.payload;
     }
 
     @JsonProperty("payload")
-    public void setPayload(RMLServiceInput payload) {
+    public void setPayload(RMLServiceRequestPayload payload) {
         this.payload = payload;
     }
     
@@ -43,7 +43,7 @@ public class RMLServiceRequestMessage extends AbstractMessage {
             return rmlserviceInput;
         }
 
-        @JsonProperty("graphManagerInput")
+        @JsonProperty("rmlserviceInput")
         public void setRMLServiceInput(RMLServiceInput rmlserviceInput) {
             this.rmlserviceInput = rmlserviceInput;
         }
