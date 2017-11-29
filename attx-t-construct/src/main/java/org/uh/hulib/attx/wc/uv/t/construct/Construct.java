@@ -183,11 +183,14 @@ public class Construct extends AbstractDpu<ConstructConfig_V1> {
   //                      throw new Exception("Transformation failed. " + response.getPayload().getStatusMessage());
    //                 }
                     prov.getActivity().setStatus("success");
+                    
+                    prov.setOutput(new ArrayList<DataProperty>());
                     String outputURI = response.getPayload().getGraphManagerOutput();
-                            DataProperty output = new DataProperty();
-                            output.setKey("outputDataset");
-                            output.setRole("Dataset");                            
-                            provPayload.put("outputDataset", outputURI);
+                    DataProperty output = new DataProperty();
+                    output.setKey("outputDataset");
+                    output.setRole("Dataset");                            
+                    prov.getOutput().add(output);
+                    provPayload.put("outputDataset", outputURI);
                     
                     ProvenanceMessage provMsg = new ProvenanceMessage();
                     provMsg.setProvenance(prov);
@@ -266,20 +269,10 @@ public class Construct extends AbstractDpu<ConstructConfig_V1> {
         provAct.setCommunication(new ArrayList<Communication>());
         provAct.getCommunication().add(provCom);
 
-        DataProperty provInput = new DataProperty();
-        provInput.setKey("graphManagerInput");
-        provInput.setRole("Dataset");
-        DataProperty provOutput = new DataProperty();
-        provOutput.setKey("graphManagerOutput");
-        provOutput.setRole("Dataset");
-
         provContent.setContext(provContext);
         provContent.setAgent(provAgent);
         provContent.setActivity(provAct);
-        provContent.setInput(new ArrayList());
-        provContent.getInput().add(provInput);
-        provContent.setOutput(new ArrayList());
-        provContent.getOutput().add(provOutput);
+
         return provContent;
     }
 

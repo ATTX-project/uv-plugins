@@ -32,14 +32,17 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import org.apache.commons.io.FileUtils;
 import org.openrdf.model.Statement;
 import org.openrdf.model.ValueFactory;
+import org.openrdf.model.vocabulary.DC;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.RepositoryResult;
@@ -132,30 +135,45 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
                 mq = new RabbitMQClient("messagebroker", System.getenv("MUSER"), System.getenv("MPASS"), "provenance.inbox");
                 ObjectMapper mapper = new ObjectMapper();
                 Provenance prov = getProv();
+                prov.setInput(new ArrayList<DataProperty>());
+                prov.setOutput(new ArrayList<DataProperty>());
+                Map<String, Object> provPayload = new HashMap<String, Object>();
+
                 List<Source> files = new ArrayList<Source>();
                 try {
+                    Provenance requestProv = new Provenance();
+                    requestProv.setContext(getProvenanceContext());
+                    
                     Iterator<FilesDataUnit.Entry> fileIterator = fileEntries.iterator();
+                    int i = 0;
                     while (fileIterator.hasNext()) {
                         Source s = new Source();
                         s.setInputType("Data");
                         s.setInput(FileUtils.readFileToString(new File(new URI(fileIterator.next().getFileURIString())), "UTF-8"));
-                        files.add(s);
+                        files.add(s);                                                
+                        
                     }
                     log.info("Read data inputs");
                     for (org.openrdf.model.URI graphURI : uriEntries) {
-                        String inputURI = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
-                        String contentType = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileContentType"));
-                        
+                        //String inputURI = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
+                        //String contentType = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileContentType"));
+                        String inputURI = getSinglePropertyValue(c, graphURI, DC.IDENTIFIER);
                         Source s = new Source();
-                        s.setInputType("URI");
+                        s.setInputType("Graph");
                         s.setInput(inputURI);
-                        s.setContentType(contentType);
+                        //s.setContentType(contentType);
                         files.add(s);
+                        
+                        DataProperty input = new DataProperty();
+                        input.setKey("inputDataset" + i);
+                        input.setRole("Dataset");                            
+                        prov.getInput().add(input);
+                        provPayload.put("inputDataset" + i, inputURI);
+                        i++;
+                        
                     }
                     log.info("Read uri inputs");
                     FramingRequestMessage request = new FramingRequestMessage();
-                    Provenance requestProv = new Provenance();
-                    requestProv.setContext(getProvenanceContext());
                     request.setProvenance(requestProv);
                     FramingServiceInput requestInput = new FramingServiceInput();
                     requestInput.setDocType(config.getDocType());
@@ -182,10 +200,6 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
                     if (!response.getPayload().getStatus().equalsIgnoreCase("success")) {
                         throw new Exception("Transformation failed. " + response.getPayload().getStatusMessage());
                     }
-                    prov.getActivity().setStatus("success");
-                    ProvenanceMessage provMsg = new ProvenanceMessage();
-                    provMsg.setProvenance(prov);
-                    mq.sendProvMessage(mapper.writeValueAsString(provMsg));
 
                     final ValueFactory vf = fileData.getValueFactory();
                     // entry is the graph 
@@ -208,7 +222,18 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
 
                     fileData.add(datasetUriEntity.asStatements());
                     
-
+                    prov.getActivity().setStatus("success");
+                    ProvenanceMessage provMsg = new ProvenanceMessage();
+                    
+                    DataProperty output = new DataProperty();
+                    output.setKey("outputDataset");
+                    output.setRole("Dataset");                            
+                    prov.getOutput().add(output);
+                    provPayload.put("outputDataset", resultURI);
+                    
+                    provMsg.setProvenance(prov);
+                    provMsg.setPayload(provPayload);
+                    mq.sendProvMessage(mapper.writeValueAsString(provMsg));
 
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -260,20 +285,6 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
         provAct.setCommunication(new ArrayList<Communication>());
         provAct.getCommunication().add(provCom);
 
-        DataProperty provInput = new DataProperty();
-        provInput.setKey("framingServiceInput");
-        provInput.setRole("Dataset");
-        DataProperty provOutput = new DataProperty();
-        provOutput.setKey("framingServiceOutput");
-        provOutput.setRole("Dataset");
-
-        provContent.setContext(provContext);
-        provContent.setAgent(provAgent);
-        provContent.setActivity(provAct);
-        provContent.setInput(new ArrayList());
-        provContent.getInput().add(provInput);
-        provContent.setOutput(new ArrayList());
-        provContent.getOutput().add(provOutput);
         return provContent;
     }
 
@@ -286,5 +297,5 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
             return null;
         }
 
-    }  
+    }     
 }

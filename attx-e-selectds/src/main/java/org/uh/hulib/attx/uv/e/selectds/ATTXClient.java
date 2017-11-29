@@ -35,10 +35,10 @@ public class ATTXClient {
             String query = "SELECT ?uri ?title ?source\n" +
 "from <http://data.hulib.helsinki.fi/attx/prov>\n" +
 "WHERE {\n" +
-" 	?uri a <htEtp://data.hulib.helsinki.fi/attx/onto#Dataset> .\n" +
+" 	?uri a <http://data.hulib.helsinki.fi/attx/onto#Dataset> .\n" +
 "  	?uri <http://data.hulib.helsinki.fi/attx/uri> ?source .\n" +
 "	?uri <http://data.hulib.helsinki.fi/attx/title> ?title \n" +
-"    filter( regex(?source, \"/input\"))\n" +
+"   MINUS {?uri <http://data.hulib.helsinki.fi/attx/license> ?license}\n" +
 "}";
             HttpResponse<JsonNode> r = Unirest.post("http://fuseki:3030/test/query")
                         .header("Content-Type", "application/sparql-query")

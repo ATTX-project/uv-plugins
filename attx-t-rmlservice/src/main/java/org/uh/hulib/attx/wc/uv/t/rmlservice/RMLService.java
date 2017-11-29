@@ -204,7 +204,9 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                     RMLServiceInput requestInput = new RMLServiceInput();
                     requestInput.setRmlMapping(config.getConfiguration());
                     requestInput.setSourceData(files);
-                    request.setPayload(requestInput);
+                    RMLServiceRequestMessage.RMLServiceRequestPayload payload = request.new RMLServiceRequestPayload();
+                    payload.setRMLServiceInput(requestInput);
+                    request.setPayload(payload);
                     String requestStr = mapper.writeValueAsString(request);
                     log.info(requestStr);
                     String responseText = mq.sendSyncServiceMessage(requestStr, "rmlservice", 60000);
@@ -214,7 +216,7 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
 
                     log.info(responseText);
                     RMLServiceResponseMessage response = mapper.readValue(responseText, RMLServiceResponseMessage.class);
-                    if (!response.getPayload().getStatus().equals("SUCCESS")) {
+                    if (!response.getPayload().getStatus().equals("success")) {
                         throw new Exception("Transformation failed. " + response.getPayload().getStatusMessage());
                     }
                     prov.getActivity().setStatus("success");

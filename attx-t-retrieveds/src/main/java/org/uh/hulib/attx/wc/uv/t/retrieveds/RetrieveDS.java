@@ -28,7 +28,9 @@ import eu.unifiedviews.helpers.dpu.rdf.EntityBuilder;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import org.openrdf.model.Statement;
 import org.openrdf.model.ValueFactory;
@@ -131,15 +133,26 @@ public class RetrieveDS extends AbstractDpu<RetrieveDSConfig_V1> {
                 mq = new RabbitMQClient("messagebroker", System.getenv("MUSER"), System.getenv("MPASS"), "provenance.inbox");
                 ObjectMapper mapper = new ObjectMapper();
                 Provenance prov = getProv();
+                Map<String, Object> provPayload = new HashMap<String, Object>();
+
                 List<String> sourceGraphs = new ArrayList<String>();
+                int i = 0;
                 try {
                     log.info("Read data inputs");
+                    prov.setInput(new ArrayList<DataProperty>());
                     for (org.openrdf.model.URI graphURI : dataSetURIEntries) {
                         writeGraph(c, graphURI, System.out);
                         List<String> inputURIs = getAllPropertyValues(c, graphURI, DC.IDENTIFIER);
                         for(String inputURI : inputURIs) {
                             log.info("Adding source: " + inputURI);
                             sourceGraphs.add(inputURI);
+                            
+                            DataProperty input = new DataProperty();
+                            input.setKey("inputDataset" + i);
+                            input.setRole("Dataset");                            
+                            prov.getInput().add(input);
+                            provPayload.put("inputDataset" + i, inputURI);
+                            i++;                            
                             
                         }
                     }
@@ -173,6 +186,16 @@ public class RetrieveDS extends AbstractDpu<RetrieveDSConfig_V1> {
                     prov.getActivity().setStatus("success");
 
                     ProvenanceMessage provMsg = new ProvenanceMessage();
+                    prov.setOutput(new ArrayList<DataProperty>());
+                    
+                    DataProperty output = new DataProperty();
+                    output.setKey("outputDataset");
+                    output.setRole("Dataset");                            
+                    prov.getOutput().add(output);
+                    
+                    String outputURI = response.getPayload().getGraphManagerOutput();
+                    provPayload.put("outputDataset", outputURI);
+                    
                     provMsg.setProvenance(prov);
                     mq.sendProvMessage(mapper.writeValueAsString(provMsg));
 
@@ -246,20 +269,10 @@ public class RetrieveDS extends AbstractDpu<RetrieveDSConfig_V1> {
         provAct.setCommunication(new ArrayList<Communication>());
         provAct.getCommunication().add(provCom);
 
-        DataProperty provInput = new DataProperty();
-        provInput.setKey("graphManagerInput");
-        provInput.setRole("Dataset");
-        DataProperty provOutput = new DataProperty();
-        provOutput.setKey("graphManagerOutput");
-        provOutput.setRole("Dataset");
-
         provContent.setContext(provContext);
         provContent.setAgent(provAgent);
         provContent.setActivity(provAct);
-        provContent.setInput(new ArrayList());
-        provContent.getInput().add(provInput);
-        provContent.setOutput(new ArrayList());
-        provContent.getOutput().add(provOutput);
+
         return provContent;
     }
 
