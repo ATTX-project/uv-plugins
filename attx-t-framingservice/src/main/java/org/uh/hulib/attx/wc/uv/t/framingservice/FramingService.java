@@ -155,21 +155,23 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
                     }
                     log.info("Read data inputs");
                     for (org.openrdf.model.URI graphURI : uriEntries) {
-                        //String inputURI = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
-                        //String contentType = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileContentType"));
-                        String inputURI = getSinglePropertyValue(c, graphURI, DC.IDENTIFIER);
-                        Source s = new Source();
-                        s.setInputType("Graph");
-                        s.setInput(inputURI);
-                        //s.setContentType(contentType);
-                        files.add(s);
-                        
-                        DataProperty input = new DataProperty();
-                        input.setKey("inputDataset" + i);
-                        input.setRole("Dataset");                            
-                        prov.getInput().add(input);
-                        provPayload.put("inputDataset" + i, inputURI);
-                        i++;
+                        List<String> inputURIs = getAllPropertyValues(c, graphURI, DC.IDENTIFIER);
+                        for(String inputURI : inputURIs) {
+                            //String inputURI = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
+                            //String contentType = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileContentType"));
+                            Source s = new Source();
+                            s.setInputType("Graph");
+                            s.setInput(inputURI);
+                            //s.setContentType(contentType);
+                            files.add(s);
+
+                            DataProperty input = new DataProperty();
+                            input.setKey("inputDataset" + i);
+                            input.setRole("Dataset");                            
+                            prov.getInput().add(input);
+                            provPayload.put("inputDataset" + i, inputURI);
+                            i++;
+                        }
                         
                     }
                     log.info("Read uri inputs");
@@ -233,7 +235,9 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
                     
                     provMsg.setProvenance(prov);
                     provMsg.setPayload(provPayload);
-                    mq.sendProvMessage(mapper.writeValueAsString(provMsg));
+                    String provMsgStr = mapper.writeValueAsString(provMsg);
+                    log.info(provMsgStr);
+                    mq.sendProvMessage(provMsgStr);
 
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -285,6 +289,10 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
         provAct.setCommunication(new ArrayList<Communication>());
         provAct.getCommunication().add(provCom);
 
+        provContent.setContext(provContext);
+        provContent.setAgent(provAgent);
+        provContent.setActivity(provAct);        
+        
         return provContent;
     }
 
@@ -298,4 +306,14 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
         }
 
     }     
+    private List<String> getAllPropertyValues(RepositoryConnection c, org.openrdf.model.URI graph, org.openrdf.model.URI prop) throws Exception {
+        RepositoryResult<Statement> r = c.getStatements(null, prop, null, false, graph);
+        List<String> values = new ArrayList<String>();
+        while (r.hasNext()) {
+            Statement stmt = r.next();
+            values.add( stmt.getObject().stringValue());
+        }
+        return values;
+
+    }  
 }
