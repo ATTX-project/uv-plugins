@@ -278,8 +278,20 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
         prov.setContext(getProvenanceContext());        
         prov.getContext().setStepID("");
         URI[] outputGraphsMetadata = RDFHelper.getGraphsURIArray(outputDatasetMetadata);
-        
-        
+
+        DataProperty output = new DataProperty();
+        output.setKey("outputDataset");
+        output.setRole("PublishedDataset");
+        prov.setOutput(new ArrayList<DataProperty>());
+        prov.getOutput().add(output);
+
+
+        Map<String, Object> outputDataset = new HashMap<String, Object>();
+        outputDataset.put("uri", config.getAlias());
+
+        payload.put("outputDataset", outputDataset);
+    
+  /*      
         if (outputGraphsMetadata.length > 0) {
             // just using the first one for now!
             URI g = outputGraphsMetadata[0];
@@ -300,7 +312,7 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
 
             payload.put("outputDataset", outputDataset);
         }
-        
+*/        
         URI[] inputGraphsMetadata = RDFHelper.getGraphsURIArray(inputDatasetMetadata);
         log.info("***: "+ inputGraphsMetadata.length);
         prov.setInput(new ArrayList<DataProperty>());        
@@ -314,6 +326,7 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
                     // get the inputs from the external ds step 
                     inputURIs.add(g.toString());
                 }
+                
                 log.info("inputURIS:" + inputURIs.size());
                 for(int i2 = 0; i2 < inputURIs.size(); i2++) {
                     String inputURI = inputURIs.get(i2);
@@ -356,7 +369,7 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
         prov.getContext().setStepID("");
         
         URI[] outputGraphsMetadata = RDFHelper.getGraphsURIArray(outputDatasetMetadata);
-        
+     
         
         if (outputGraphsMetadata.length > 0) {
             // just using the first one for now!
@@ -364,7 +377,7 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
             
             writeGraph(c, g, System.out);
             
-            String targetGraph = getOutputGraphURI();
+            //String targetGraph = getOutputGraphURI();
             String targetGraphTitle = getSinglePropertyValue(c, g, DC.TITLE);
             String targetGraphDesc = getSinglePropertyValue(c, g, DC.DESCRIPTION);
 
@@ -375,9 +388,12 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
             prov.getOutput().add(output);
 
             Map<String, Object> outputDataset = new HashMap<String, Object>();
-            outputDataset.put("uri", targetGraph);
-            outputDataset.put("title", targetGraphTitle);
-            outputDataset.put("description", targetGraphDesc);
+            //outputDataset.put("uri", targetGraph);
+            outputDataset.put("uri", config.getAlias());
+            if(targetGraphTitle != null)
+                outputDataset.put("title", targetGraphTitle);
+            if(targetGraphDesc != null)  
+                outputDataset.put("description", targetGraphDesc);
 
             payload.put("outputDataset", outputDataset);
         }
@@ -444,9 +460,9 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
         if (outputGraphsMetadata.length > 0) {
             DataProperty output = new DataProperty();
             output.setKey("outputDataset");
-            output.setRole("Dataset");            
+            output.setRole("PublishedDataset");            
             prov.getOutput().add(output);
-            payload.put("outputDataset", getOutputGraphURI());            
+            payload.put("outputDataset", config.getAlias());            
         }
 
         URI[] inputGraphsMetadata = RDFHelper.getGraphsURIArray(uriInput);
