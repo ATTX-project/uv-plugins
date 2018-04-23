@@ -2,7 +2,7 @@ package org.uh.hulib.attx.wc.uv.common.pojos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class ValidationServiceResponseMessage {
+public class ValidationServiceResponseMessage extends AbstractMessage {
     @JsonProperty("payload")
     private ValidationServiceResponseMessage.ValidationServiceResponseMessagePayload payload = new ValidationServiceResponseMessage.ValidationServiceResponseMessagePayload();
 
@@ -24,12 +24,12 @@ public class ValidationServiceResponseMessage {
         @JsonProperty("validationServiceOutput")
         private ValidationServiceOutput validationServiceOutput;
 
-        @JsonProperty("ontologyServiceOutput")
+        @JsonProperty("validationServiceOutput")
         public ValidationServiceOutput getValidationServiceOutput() {
             return validationServiceOutput;
         }
 
-        @JsonProperty("ontologyServiceOutput")
+        @JsonProperty("validationServiceOutput")
         public void setValidationServiceOutput(ValidationServiceOutput validationServiceOutput) {
             this.validationServiceOutput = validationServiceOutput;
         }
