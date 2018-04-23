@@ -35,7 +35,7 @@ public class OntologyServiceResponseMessage extends AbstractMessage {
         private OntologyServiceOutput ontologyServiceOutput;
 
         @JsonProperty("ontologyServiceOutput")
-        public OntologyServiceOutput getFramingServiceOutput() {
+        public OntologyServiceOutput getOntologyServiceOutput() {
             return ontologyServiceOutput;
         }
 
