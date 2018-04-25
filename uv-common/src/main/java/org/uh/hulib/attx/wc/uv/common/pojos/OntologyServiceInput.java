@@ -6,6 +6,7 @@
 package org.uh.hulib.attx.wc.uv.common.pojos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -16,7 +17,7 @@ public class OntologyServiceInput {
     @JsonProperty("activity")
     private String activity;
     @JsonProperty("sourceData")
-    private List<Source> sourceData = null;
+    private List<OntologyServiceSource> sourceData = new ArrayList<OntologyServiceSource>();
 
     @JsonProperty("activity")
     public String getActivity() {
@@ -29,13 +30,42 @@ public class OntologyServiceInput {
     }
 
     @JsonProperty("sourceData")
-    public List<Source> getSourceData() {
+    public List<OntologyServiceSource> getSourceData() {
         return sourceData;
     }
 
     @JsonProperty("sourceData")
-    public void setSourceData(List<Source> sourceData) {
+    public void setSourceData(List<OntologyServiceSource> sourceData) {
         this.sourceData = sourceData;
+    }
+    
+    public class OntologyServiceSource {
+        @JsonProperty("schemaGraph")
+        private String schemaGraph;
+        @JsonProperty("dataGraph")
+        private String dataGraph;
+
+        @JsonProperty("schemaGraph")
+        public String getSchemaGraph() {
+            return schemaGraph;
+        }
+
+        @JsonProperty("schemaGraph")
+        public void setSchemaGraph(String schemaGraph) {
+            this.schemaGraph = schemaGraph;
+        }
+
+        @JsonProperty("dataGraph")
+        public String getDataGraph() {
+            return dataGraph;
+        }
+
+        @JsonProperty("dataGraph")
+        public void setDataGraph(String dataGraph) {
+            this.dataGraph = dataGraph;
+        }
+
+        
     }
     
 }
