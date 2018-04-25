@@ -32,15 +32,15 @@ public class OntologyServiceResponseMessage extends AbstractMessage {
         }
         
         @JsonProperty("ontologyServiceOutput")
-        private OntologyServiceOutput ontologyServiceOutput;
+        private String ontologyServiceOutput;
 
         @JsonProperty("ontologyServiceOutput")
-        public OntologyServiceOutput getOntologyServiceOutput() {
+        public String getOntologyServiceOutput() {
             return ontologyServiceOutput;
         }
 
         @JsonProperty("ontologyServiceOutput")
-        public void setOntologyServiceOutput(OntologyServiceOutput ontologyServiceOutput) {
+        public void setOntologyServiceOutput(String ontologyServiceOutput) {
             this.ontologyServiceOutput = ontologyServiceOutput;
         }
     }

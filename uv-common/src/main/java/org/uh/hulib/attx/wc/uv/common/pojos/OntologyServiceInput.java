@@ -17,7 +17,7 @@ public class OntologyServiceInput {
     @JsonProperty("activity")
     private String activity;
     @JsonProperty("sourceData")
-    private List<OntologyServiceSource> sourceData = new ArrayList<OntologyServiceSource>();
+    private OntologyServiceSource sourceData;
 
     @JsonProperty("activity")
     public String getActivity() {
@@ -30,12 +30,12 @@ public class OntologyServiceInput {
     }
 
     @JsonProperty("sourceData")
-    public List<OntologyServiceSource> getSourceData() {
+    public OntologyServiceSource getSourceData() {
         return sourceData;
     }
 
     @JsonProperty("sourceData")
-    public void setSourceData(List<OntologyServiceSource> sourceData) {
+    public void setSourceData(OntologyServiceSource sourceData) {
         this.sourceData = sourceData;
     }
     
