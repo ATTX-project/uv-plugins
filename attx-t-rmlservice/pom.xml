@@ -83,16 +83,7 @@
             <scope>compile</scope>
         </dependency>
 
-        <!-- Other dependencies --> 
-        <dependency>
-          <groupId>org.uh.hulib.attx.wc.uv</groupId>
-          <artifactId>uv-common</artifactId>
-          <version>1.9-SNAPSHOT</version>
-          <!--
-          <scope>system</scope>
-          <systemPath>${project.basedir}/../uv-common/build/libs/uv-common-1.0-SNAPSHOT.jar</systemPath>
-          -->
-        </dependency>
+        <!-- Other dependencies -->
         
 <dependency>
     <groupId>com.fasterxml.jackson.core</groupId>
@@ -126,7 +117,16 @@
     <artifactId>amqp-client</artifactId>
     <version>3.2.4</version>
 </dependency>           
-
+        <dependency>
+          <groupId>org.uh.hulib.attx.wc.uv</groupId>
+          <artifactId>uv-common</artifactId>
+          <version>1.10-SNAPSHOT</version>
+          <!--
+          <scope>system</scope>
+          <systemPath>${project.basedir}/../uv-common/build/libs/uv-common-1.0-SNAPSHOT.jar</systemPath>
+          -->
+        </dependency>
+        
     </dependencies>
     
    
