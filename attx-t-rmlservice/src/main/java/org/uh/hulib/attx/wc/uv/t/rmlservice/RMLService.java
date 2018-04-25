@@ -209,7 +209,7 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                     request.setPayload(payload);
                     String requestStr = mapper.writeValueAsString(request);
                     log.info(requestStr);
-                    String responseText = mq.sendSyncServiceMessage(requestStr, "rmlservice", 60000);
+                    String responseText = mq.sendSyncServiceMessage(requestStr, "rmlservice", 6000000);
                     if (responseText == null) {
                         throw new Exception("No response from service!");
                     }
