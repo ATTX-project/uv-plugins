@@ -123,7 +123,7 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
                 
                 String requestStr = mapper.writeValueAsString(req);
                 log.info(requestStr);
-                String responseStr = mq.sendSyncServiceMessage(requestStr, "attx.indexing.inbox", 10000);
+                String responseStr = mq.sendSyncServiceMessage(requestStr, "attx.indexing.inbox", 600000);
 
                 log.info(responseStr);
                 if(responseStr == null) {
