@@ -129,7 +129,7 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
             }
             
             if (fileEntries.size() > 0 || uriEntries.length > 0) {
-                System.out.println("- RML conf:");
+                System.out.println("- conf:");
                 System.out.println(config.getConfiguration());
                 System.out.println("URIs:" + uriEntries.length);
                 mq = new RabbitMQClient("messagebroker", System.getenv("MUSER"), System.getenv("MPASS"), "provenance.inbox");
@@ -162,7 +162,7 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
                             Source s = new Source();
                             s.setInputType("Graph");
                             s.setInput(inputURI);
-                            //s.setContentType(contentType);
+                            s.setContentType("turtle");
                             files.add(s);
 
                             DataProperty input = new DataProperty();
@@ -190,7 +190,7 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
                     
                     String requestStr = mapper.writeValueAsString(request);
                     log.info(requestStr);
-                    String responseText = mq.sendSyncServiceMessage(requestStr, "attx.ldframe.inbox", 60000);
+                    String responseText = mq.sendSyncServiceMessage(requestStr, "attx.ldframe.inbox", 600000);
                     if (responseText == null) {
                         throw new Exception("No response from service!");
                     }
