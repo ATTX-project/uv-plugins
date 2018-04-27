@@ -11,6 +11,7 @@ import com.mashape.unirest.http.Unirest;
 import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  *
@@ -40,15 +41,22 @@ public class ATTXClient {
 "	?uri <http://data.hulib.helsinki.fi/attx/title> ?title \n" +
 "   MINUS {?uri <http://data.hulib.helsinki.fi/attx/license> ?license}\n" +
 "}";
-            HttpResponse<JsonNode> r = Unirest.post("http://fuseki:3030/test/query")
+            HttpResponse<String> r = Unirest.post("http://fuseki:3030/ds/query")
                         .header("Content-Type", "application/sparql-query")
                         .header("Accept", "application/sparql-results+json")
                         .body(query)
-                        .asJson();
+                        .asString();
             if(r.getStatus() == 404) {
                 return values;
             }
-            JSONArray a = r.getBody().getObject().getJSONObject("results").getJSONArray("bindings");
+            System.out.print(r.getBody());
+            JSONObject root = new JSONObject(r.getBody());
+            JSONArray a = null;
+            try {
+                a = root.getJSONObject("results").getJSONArray("bindings");
+            }catch(Exception ex) {
+                a = new JSONArray(root.getJSONObject("results").getJSONObject("bindings"));
+            }
             for(int i = 0; i < a.length(); i++) {
                 String uri = a.getJSONObject(i).getJSONObject("source").getString("value");
                 String label = a.getJSONObject(i).getJSONObject("title").getString("value");

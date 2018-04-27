@@ -30,7 +30,7 @@ public class SelectDSVaadinDialog extends AbstractDialog<SelectDSConfig_V1> {
 
     @Override
     public void setConfiguration(SelectDSConfig_V1 c) throws DPUConfigException {
-        attxClient = new ATTXClient("graphmanager", "fuseki:3030/test");
+        attxClient = new ATTXClient("graphmanager", "fuseki:3030/ds");
         List<OptionValue> workingGraphs = attxClient.getWorkingGraphs();
         graphsTable.removeAllItems();
         for(OptionValue ov : workingGraphs) {
