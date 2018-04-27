@@ -181,8 +181,7 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                 List<Source> files = new ArrayList<Source>();
                 try {
                     Iterator<FilesDataUnit.Entry> fileIterator = fileEntries.iterator();
-                    while (fileIterator.hasNext()) {
-                        log.info("test");
+                    while (fileIterator.hasNext()) {                        
                         Source s = new Source();
                         s.setInputType("Data");
                         s.setInput(FileUtils.readFileToString(new File(new URI(fileIterator.next().getFileURIString())), "UTF-8"));
@@ -209,7 +208,7 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                     request.setPayload(payload);
                     String requestStr = mapper.writeValueAsString(request);
                     log.info(requestStr);
-                    String responseText = mq.sendSyncServiceMessage(requestStr, "rmlservice", 6000000);
+                    String responseText = mq.sendSyncServiceMessage(requestStr, "rmlservice", 600000);
                     if (responseText == null) {
                         throw new Exception("No response from service!");
                     }
