@@ -78,7 +78,7 @@ public class RabbitMQClient implements MessagingClient {
         return response.poll(timeout, TimeUnit.MILLISECONDS);        
     }
     
-    public void close() throws IOException {
-        connection.close();
+    public void close() throws IOException {        
+        connection.close(10000);
     }    
 }
