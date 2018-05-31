@@ -122,7 +122,7 @@
         <dependency>
           <groupId>org.uh.hulib.attx.wc.uv</groupId>
           <artifactId>uv-common</artifactId>
-          <version>1.16-SNAPSHOT</version>
+          <version>1.17-SNAPSHOT</version>
         </dependency>
     </dependencies>
     
