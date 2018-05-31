@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import eu.unifiedviews.helpers.dpu.config.ConfigHistory;
 import eu.unifiedviews.helpers.dpu.context.ContextUtils;
 import eu.unifiedviews.helpers.dpu.exec.AbstractDpu;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+import org.apache.commons.io.FileUtils;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.DC;
@@ -339,7 +341,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
 
                 
 
-                if (uriEntries.length > 0) {
+                if (uriEntries.length > 0 || fileEntries.size() > 0) {
                     GraphManagerInput graphManagerInput = new GraphManagerInput();
                     graphManagerInput.setTask(config.getGraphActivity());
                     graphManagerInput.setTargetGraph(getOutputGraphURI());
@@ -366,7 +368,16 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                         else {
                             //ContextUtils.sendError(ctx, "No input dataset files available.", );
                         }
-                    }                    
+                    }
+                    for (FilesDataUnit.Entry entry : fileEntries) {
+                        Source s = new Source();
+                        s.setContentType("text/turtle");
+                        s.setInputType("Data");
+                        s.setInput(FileUtils.readFileToString(new File(new java.net.URI(entry.getFileURIString())), "UTF-8"));
+                        System.out.println("Data");
+                        System.out.println(s.getInput());
+                        graphManagerInput.getSourceData().add(s);
+                    }
                     p.setGraphManagerInput(graphManagerInput);
                     request.setPayload(p);
                     Provenance requestProv = new Provenance();
@@ -398,9 +409,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                     mq.sendProvMessage(provWorkflowMessage);
 
                     
-                } else if (fileEntries.size() > 0) {
-                    throw new Exception("File inputs are not implemented yet!");
-                }
+                } 
             } catch (Exception ex) {
                 ex.printStackTrace();
                 stepProv.getActivity().setStatus("FAILED");
