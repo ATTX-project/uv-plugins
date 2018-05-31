@@ -253,7 +253,7 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
                         }
                     }
                     if (mq != null) {
-                        try {
+                        try {                            
                             mq.close();
                         } catch (IOException ex) {
                             java.util.logging.Logger.getLogger(FramingService.class.getName()).log(Level.SEVERE, null, ex);
