@@ -1,1 +1,1 @@
-include "uv-common", "attx-t-rmlservice", "attx-l-replaceds", "attx-t-describeds", "attx-t-describeexternalds", "attx-l-publishtoapi", "attx-e-oaipmhharvester", "attx-e-selectds", "attx-t-construct", "attx-t-framingservice", "attx-t-retrieveds"
+include "uv-common", "attx-t-rmlservice", "attx-l-replaceds", "attx-t-describeds", "attx-t-describeexternalds", "attx-l-publishtoapi", "attx-e-oaipmhharvester", "attx-e-selectds", "attx-t-construct", "attx-t-framingservice", "attx-t-retrieveds", "attx-t-ontologyservice"
