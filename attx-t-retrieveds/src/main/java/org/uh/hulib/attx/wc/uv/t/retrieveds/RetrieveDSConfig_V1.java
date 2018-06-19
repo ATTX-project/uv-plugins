@@ -12,18 +12,18 @@ package org.uh.hulib.attx.wc.uv.t.retrieveds;
  */
 public class RetrieveDSConfig_V1 {
 
-    private String configuration = "";
+    private String outputType = "URI";
 
     public RetrieveDSConfig_V1() {
 
     }
 
-    public String getConfiguration() {
-        return configuration;
+    public String getOutputType() {
+        return outputType;
     }
 
-    public void setConfiguration(String configuration) {
-        this.configuration = configuration;
+    public void setOutputType(String outputType) {
+        this.outputType = outputType;
     }
     
 
