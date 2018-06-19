@@ -350,8 +350,8 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                     for (URI graphURI : uriEntries) {
                         writeGraph(c, graphURI, System.out);
                         // check for file URI
-                        String inputURI = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
-                        if (inputURI != null) {
+                        List<String> inputURIs = getAllPropertyValues(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
+                        for(String inputURI : inputURIs) {
                             Source source = new Source();
 
                             String contentType = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileContentType"));
@@ -364,10 +364,9 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                             source.setInput(inputURI);
                             
                             graphManagerInput.getSourceData().add(source);
+                            
                         }
-                        else {
-                            //ContextUtils.sendError(ctx, "No input dataset files available.", );
-                        }
+
                     }
                     for (FilesDataUnit.Entry entry : fileEntries) {
                         Source s = new Source();
