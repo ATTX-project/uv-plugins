@@ -98,7 +98,7 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
                 input.setSourceData(new ArrayList());
                 
                 for (org.openrdf.model.URI graphURI : uriEntries) {
-                    writeGraph(c, graphURI, System.out);
+                    //writeGraph(c, graphURI, System.out);
                     String inputURI = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
                     String contentType = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileContentType"));
                     String docType = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/docType"));
@@ -122,10 +122,10 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
                 req.setPayload(p);
                 
                 String requestStr = mapper.writeValueAsString(req);
-                log.info(requestStr);
-                String responseStr = mq.sendSyncServiceMessage(requestStr, "attx.indexing.inbox", 10000);
+                log.debug(requestStr);
+                String responseStr = mq.sendSyncServiceMessage(requestStr, "attx.indexing.inbox", 600000);
 
-                log.info(responseStr);
+                log.debug(responseStr);
                 if(responseStr == null) {
                     throw new Exception("Null response from the service");                    
                 }
@@ -156,8 +156,6 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
                 else {
                     ContextUtils.sendError(ctx, "Indexing failed.", "");
                 }
-                
-                // TODO: send prov message
                        
             }
             
@@ -375,7 +373,7 @@ public class PublishToAPI extends AbstractDpu<PublishToAPIConfig_V1> {
             // just using the first one for now!
             URI g = outputGraphsMetadata[0];
             
-            writeGraph(c, g, System.out);
+            //writeGraph(c, g, System.out);
             
             //String targetGraph = getOutputGraphURI();
             String targetGraphTitle = getSinglePropertyValue(c, g, DC.TITLE);

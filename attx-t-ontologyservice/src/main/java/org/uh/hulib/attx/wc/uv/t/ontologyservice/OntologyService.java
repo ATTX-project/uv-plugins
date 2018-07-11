@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.uh.hulib.attx.wc.uv.t.framingservice;
+package org.uh.hulib.attx.wc.uv.t.ontologyservice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -55,6 +55,9 @@ import org.uh.hulib.attx.wc.uv.common.pojos.ConstructRequestMessage;
 import org.uh.hulib.attx.wc.uv.common.pojos.FramingRequestMessage;
 import org.uh.hulib.attx.wc.uv.common.pojos.FramingResponseMessage;
 import org.uh.hulib.attx.wc.uv.common.pojos.FramingServiceInput;
+import org.uh.hulib.attx.wc.uv.common.pojos.OntologyServiceInput;
+import org.uh.hulib.attx.wc.uv.common.pojos.OntologyServiceRequestMessage;
+import org.uh.hulib.attx.wc.uv.common.pojos.OntologyServiceResponseMessage;
 import org.uh.hulib.attx.wc.uv.common.pojos.ProvenanceMessage;
 import org.uh.hulib.attx.wc.uv.common.pojos.RMLServiceInput;
 import org.uh.hulib.attx.wc.uv.common.pojos.Source;
@@ -71,11 +74,11 @@ import org.uh.hulib.attx.wc.uv.common.pojos.prov.Provenance;
  * @author Unknown
  */
 @DPU.AsTransformer
-public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
+public class OntologyService extends AbstractDpu<OntologyServiceConfig_V1> {
 
     public static final String datasetURISymbolicName = "datasetURI";
 
-    private static final Logger log = LoggerFactory.getLogger(FramingService.class);
+    private static final Logger log = LoggerFactory.getLogger(OntologyService.class);
 
     private long workflowID;
     private long executionID;
@@ -93,8 +96,8 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
     @ExtensionInitializer.Init(param = "fileURI")
     public WritableSimpleRdf fileData;
 
-    public FramingService() {
-        super(FramingServiceVaadinDialog.class, ConfigHistory.noHistory(FramingServiceConfig_V1.class));
+    public OntologyService() {
+        super(OntologyServiceVaadinDialog.class, ConfigHistory.noHistory(OntologyServiceConfig_V1.class));
     }
 
     private Context getProvenanceContext() throws Exception {
@@ -109,7 +112,7 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
     @Override
     protected void innerExecute() throws DPUException {
 
-        ContextUtils.sendShortInfo(ctx, "FramingService starting");
+        ContextUtils.sendShortInfo(ctx, "OntologyService DPU starting");
         this.stepID = ctx.getExecMasterContext().getDpuContext().getDpuInstanceId();
         this.workflowID = ctx.getExecMasterContext().getDpuContext().getPipelineId();
         this.executionID = ctx.getExecMasterContext().getDpuContext().getPipelineExecutionId();
@@ -117,18 +120,15 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
         RabbitMQClient mq = null;
 
         try {             
-            org.openrdf.model.URI[] uriEntries = new org.openrdf.model.URI[0];
-            Set<FilesDataUnit.Entry> fileEntries = new HashSet<FilesDataUnit.Entry>();
-            if(uriInput != null) {                
-                c = uriInput.getConnection();
-                uriEntries = RDFHelper.getGraphsURIArray(uriInput);
-            }
-            else {               
-                c = filesInput.getConnection();
-                fileEntries = FilesHelper.getFiles(filesInput);
-            }
+            org.openrdf.model.URI[] uriEntries = RDFHelper.getGraphsURIArray(uriInput);
+            System.out.println("dataSetURIs size:" + uriEntries.length);
             
-            if (fileEntries.size() > 0 || uriEntries.length > 0) {
+            Set<FilesDataUnit.Entry> fileEntries = new HashSet<FilesDataUnit.Entry>();
+            c = uriInput.getConnection();
+            fileEntries = FilesHelper.getFiles(filesInput);
+            if (uriEntries.length > 0) {
+                System.out.println("- conf:");
+                System.out.println(config.getConfiguration());
                 mq = new RabbitMQClient("messagebroker", System.getenv("MUSER"), System.getenv("MPASS"), "provenance.inbox");
                 ObjectMapper mapper = new ObjectMapper();
                 Provenance prov = getProv();
@@ -136,62 +136,53 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
                 prov.setOutput(new ArrayList<DataProperty>());
                 Map<String, Object> provPayload = new HashMap<String, Object>();
 
-                List<Source> files = new ArrayList<Source>();
                 try {
                     Provenance requestProv = new Provenance();
                     requestProv.setContext(getProvenanceContext());
                     
                     Iterator<FilesDataUnit.Entry> fileIterator = fileEntries.iterator();
                     int i = 0;
-                    while (fileIterator.hasNext()) {
-                        Source s = new Source();
-                        s.setInputType("Data");
-                        s.setInput(FileUtils.readFileToString(new File(new URI(fileIterator.next().getFileURIString())), "UTF-8"));
-                        files.add(s);                                                
-                        
-                    }
+                    OntologyServiceInput input = new OntologyServiceInput();
+                    OntologyServiceInput.OntologyServiceSource s = input.new OntologyServiceSource();
                     for (org.openrdf.model.URI graphURI : uriEntries) {
-                        List<String> inputURIs = getAllPropertyValues(c, graphURI, DC.IDENTIFIER);
-                        for(String inputURI : inputURIs) {
-                            //String inputURI = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
-                            //String contentType = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileContentType"));
-                            Source s = new Source();
-                            s.setInputType("Graph");
-                            s.setInput(inputURI);
-                            s.setContentType("turtle");
-                            files.add(s);
-
-                            DataProperty input = new DataProperty();
-                            input.setKey("inputDataset" + i);
-                            input.setRole("Dataset");                            
-                            prov.getInput().add(input);
-                            provPayload.put("inputDataset" + i, inputURI);
-                            i++;
-                        }
                         
+                        
+                        //writeGraph(c, graphURI, System.out);
+                        // check for file URI
+                        String inputURI = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
+                                             
+                        if (inputURI != null) {                            
+                            s.setDataGraph(inputURI);
+                        }
+                        else {
+                            //ContextUtils.sendError(ctx, "No input dataset files available.", );
+                        }
+
                     }                    
-                    FramingRequestMessage request = new FramingRequestMessage();
+                    //while (fileIterator.hasNext()) {                        
+                    //    s.setDataGraph(fileIterator.next().getFileURIString());                                                                                 
+                    //}
+                    s.setSchemaGraph(config.getConfiguration());
+                    input.setActivity("infer");
+                    input.setSourceData(s);
+
+                    OntologyServiceRequestMessage request = new OntologyServiceRequestMessage();
                     request.setProvenance(requestProv);
-                    FramingServiceInput requestInput = new FramingServiceInput();
-                    requestInput.setDocType(config.getDocType());
-                    
-                    requestInput.setLdFrame(config.getConfiguration());
-                    requestInput.setSourceData(files);
                     
                     
-                    FramingRequestMessage.FramingRequestMessagePayload p = request.new FramingRequestMessagePayload();                    
-                    p.setGraphManagerInput(requestInput);
+                    OntologyServiceRequestMessage.OntologyServiceRequestMessagePayload p = request.new OntologyServiceRequestMessagePayload();                    
+                    p.setOntologyServiceInput(input);
                     request.setPayload(p);
                     
                     String requestStr = mapper.writeValueAsString(request);
-                    log.debug(requestStr);
-                    String responseText = mq.sendSyncServiceMessage(requestStr, "attx.ldframe.inbox", 600000);
+                    
+                    String responseText = mq.sendSyncServiceMessage(requestStr, "attx.ontology.inbox", 600000);
                     if (responseText == null) {
                         throw new Exception("No response from service!");
                     }
 
-                    log.debug(responseText);
-                    FramingResponseMessage response = mapper.readValue(responseText, FramingResponseMessage.class);
+                    
+                    OntologyServiceResponseMessage response = mapper.readValue(responseText, OntologyServiceResponseMessage.class);
                     
                     
                     if (!response.getPayload().getStatus().equalsIgnoreCase("success")) {
@@ -201,21 +192,20 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
                     final ValueFactory vf = fileData.getValueFactory();
                     // entry is the graph 
                     final RDFDataUnit.Entry entry = RdfDataUnitUtils.addGraph(fileURI,
-                            DataUnitUtils.generateSymbolicName(FramingService.class));
+                            DataUnitUtils.generateSymbolicName(OntologyService.class));
 
                     fileData.setOutput(entry);
 
-                    String resultURI = response.getPayload().getFramingServiceOutput().getOutput();
-                    if(!resultURI.startsWith("file://")) {
-                        resultURI = "file://" + resultURI;
+                    String resultURI = response.getPayload().getOntologyServiceOutput();
+                    if(resultURI.startsWith("file:/attx")) {                        
+                        resultURI = "file://" + resultURI.substring(5);
                     }
                     
-                    String contentType = response.getPayload().getFramingServiceOutput().getContentType();
+                    String contentType =  "text/turtle";
                     // TODO: what if the the result type if data?
                     final EntityBuilder datasetUriEntity = new EntityBuilder(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/FramingService"), vf);
                     datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"), vf.createURI(resultURI));
                     datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileContentType"), vf.createLiteral(contentType));
-                    datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/docType"), vf.createLiteral(config.getDocType()));
 
                     fileData.add(datasetUriEntity.asStatements());
                     
@@ -231,7 +221,7 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
                     provMsg.setProvenance(prov);
                     provMsg.setPayload(provPayload);
                     String provMsgStr = mapper.writeValueAsString(provMsg);
-                    log.info(provMsgStr);
+                    
                     mq.sendProvMessage(provMsgStr);
 
                 } catch (Exception ex) {
@@ -244,14 +234,14 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
                         try {
                             c.close();
                         } catch (RepositoryException ex) {
-                            java.util.logging.Logger.getLogger(FramingService.class.getName()).log(Level.SEVERE, null, ex);
+                            java.util.logging.Logger.getLogger(OntologyService.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                     if (mq != null) {
-                        try {                            
+                        try {
                             mq.close();
                         } catch (IOException ex) {
-                            java.util.logging.Logger.getLogger(FramingService.class.getName()).log(Level.SEVERE, null, ex);
+                            java.util.logging.Logger.getLogger(OntologyService.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 }
@@ -273,12 +263,12 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
         provAgent.setRole("ETL");
 
         Activity provAct = new Activity();
-        provAct.setTitle("Framing rdf");
+        provAct.setTitle("Ontology service infer step");
         provAct.setType("StepExecution");
 
         Communication provCom = new Communication();
-        provCom.setRole("LDframe");
-        provCom.setAgent("GraphFraming");
+        provCom.setRole("infer");
+        provCom.setAgent("OntologyService");
         provCom.setInput(new ArrayList<DataProperty>());
 
         provAct.setCommunication(new ArrayList<Communication>());
@@ -290,7 +280,7 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
         
         return provContent;
     }
-
+ 
     private String getSinglePropertyValue(RepositoryConnection c, org.openrdf.model.URI graph, org.openrdf.model.URI prop) throws Exception {
         RepositoryResult<Statement> r = c.getStatements(null, prop, null, false, graph);
         if (r.hasNext()) {
@@ -300,15 +290,24 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
             return null;
         }
 
-    }     
-    private List<String> getAllPropertyValues(RepositoryConnection c, org.openrdf.model.URI graph, org.openrdf.model.URI prop) throws Exception {
-        RepositoryResult<Statement> r = c.getStatements(null, prop, null, false, graph);
-        List<String> values = new ArrayList<String>();
-        while (r.hasNext()) {
-            Statement stmt = r.next();
-            values.add( stmt.getObject().stringValue());
-        }
-        return values;
+    }
 
-    }  
+    private void writeGraph(RepositoryConnection conn, org.openrdf.model.URI graph, OutputStream out) throws Exception {
+
+        final RDFWriter writer = Rio.createWriter(RDFFormat.TURTLE, out);
+        writer.startRDF();
+        System.out.println("Graph:" + graph.toString());
+        RepositoryResult<Statement> r = conn.getStatements(null, null, null, false, graph);
+        if (r.hasNext()) {
+            Statement stmt = null;
+            while ((stmt = r.next()) != null) {
+                writer.handleStatement(stmt);
+                if (!r.hasNext()) {
+                    break;
+                }
+            }
+
+        }
+        writer.endRDF();
+    }    
 }

@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import eu.unifiedviews.helpers.dpu.config.ConfigHistory;
 import eu.unifiedviews.helpers.dpu.context.ContextUtils;
 import eu.unifiedviews.helpers.dpu.exec.AbstractDpu;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+import org.apache.commons.io.FileUtils;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.DC;
@@ -118,7 +120,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             // just using the first one for now!
             URI g = outputGraphsMetadata[0];
             
-            writeGraph(c, g, System.out);
+            //writeGraph(c, g, System.out);
             
             String targetGraph = getOutputGraphURI();
 
@@ -196,7 +198,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             // just using the first one for now!
             URI g = outputGraphsMetadata[0];
             
-            writeGraph(c, g, System.out);
+            //writeGraph(c, g, System.out);
             
             String targetGraph = getOutputGraphURI();
             String targetGraphTitle = getSinglePropertyValue(c, g, DC.TITLE);
@@ -339,17 +341,17 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
 
                 
 
-                if (uriEntries.length > 0) {
+                if (uriEntries.length > 0 || fileEntries.size() > 0) {
                     GraphManagerInput graphManagerInput = new GraphManagerInput();
                     graphManagerInput.setTask(config.getGraphActivity());
                     graphManagerInput.setTargetGraph(getOutputGraphURI());
                     graphManagerInput.setSourceData(new ArrayList());
 
                     for (URI graphURI : uriEntries) {
-                        writeGraph(c, graphURI, System.out);
+                        //writeGraph(c, graphURI, System.out);
                         // check for file URI
-                        String inputURI = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
-                        if (inputURI != null) {
+                        List<String> inputURIs = getAllPropertyValues(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
+                        for(String inputURI : inputURIs) {
                             Source source = new Source();
 
                             String contentType = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileContentType"));
@@ -362,11 +364,20 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                             source.setInput(inputURI);
                             
                             graphManagerInput.getSourceData().add(source);
+                            
                         }
-                        else {
-                            //ContextUtils.sendError(ctx, "No input dataset files available.", );
-                        }
-                    }                    
+
+                    }
+                    for (FilesDataUnit.Entry entry : fileEntries) {
+                        Source s = new Source();
+                        //s.setContentType("text/turtle");
+                        s.setContentType("application/rdf+xml");
+                        s.setInputType("Data");
+                        s.setInput(FileUtils.readFileToString(new File(new java.net.URI(entry.getFileURIString())), "UTF-8"));
+                        System.out.println("Data");
+                        System.out.println(s.getInput());
+                        graphManagerInput.getSourceData().add(s);
+                    }
                     p.setGraphManagerInput(graphManagerInput);
                     request.setPayload(p);
                     Provenance requestProv = new Provenance();
@@ -384,6 +395,9 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
 
                     //TODO: get the status from response
                     ReplaceDSResponseMessage response = mapper.readValue(responseStr, ReplaceDSResponseMessage.class);                    
+                    if(!response.getPayload().getStatus().equals("success")) {
+                        throw new Exception(response.getPayload().getStatusMessage());
+                    }
                     String provStepMessage = mapper.writeValueAsString(provMessageStep);
                     log.info(provStepMessage);
                     mq.sendProvMessage(provStepMessage);
@@ -398,9 +412,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                     mq.sendProvMessage(provWorkflowMessage);
 
                     
-                } else if (fileEntries.size() > 0) {
-                    throw new Exception("File inputs are not implemented yet!");
-                }
+                } 
             } catch (Exception ex) {
                 ex.printStackTrace();
                 stepProv.getActivity().setStatus("FAILED");

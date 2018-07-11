@@ -27,8 +27,11 @@ import eu.unifiedviews.helpers.dpu.extension.rdf.simple.WritableSimpleRdf;
 import eu.unifiedviews.helpers.dpu.rdf.EntityBuilder;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -39,8 +42,10 @@ import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.RepositoryResult;
 import org.openrdf.rio.RDFFormat;
+import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.RDFWriter;
 import org.openrdf.rio.Rio;
+import org.openrdf.rio.helpers.StatementCollector;
 import org.uh.hulib.attx.wc.uv.common.RabbitMQClient;
 import org.uh.hulib.attx.wc.uv.common.pojos.ConstructRequestMessage;
 import org.uh.hulib.attx.wc.uv.common.pojos.ConstructResponseMessage;
@@ -97,8 +102,7 @@ public class RetrieveDS extends AbstractDpu<RetrieveDSConfig_V1> {
     private void writeGraph(RepositoryConnection conn, org.openrdf.model.URI graph, OutputStream out) throws Exception {
 
         final RDFWriter writer = Rio.createWriter(RDFFormat.TURTLE, out);
-        writer.startRDF();
-        System.out.println("Graph:" + graph.toString());
+        writer.startRDF();        
         RepositoryResult<Statement> r = conn.getStatements(null, null, null, false, graph);
         if (r.hasNext()) {
             Statement stmt = null;
@@ -138,13 +142,13 @@ public class RetrieveDS extends AbstractDpu<RetrieveDSConfig_V1> {
                 List<String> sourceGraphs = new ArrayList<String>();
                 int i = 0;
                 try {
-                    log.info("Read data inputs");
+                    
                     prov.setInput(new ArrayList<DataProperty>());
                     for (org.openrdf.model.URI graphURI : dataSetURIEntries) {
-                        writeGraph(c, graphURI, System.out);
+                        //writeGraph(c, graphURI, System.out);
                         List<String> inputURIs = getAllPropertyValues(c, graphURI, DC.IDENTIFIER);
                         for(String inputURI : inputURIs) {
-                            log.info("Adding source: " + inputURI);
+                            log.debug("Adding source: " + inputURI);
                             sourceGraphs.add(inputURI);
                             
                             DataProperty input = new DataProperty();
@@ -156,14 +160,14 @@ public class RetrieveDS extends AbstractDpu<RetrieveDSConfig_V1> {
                             
                         }
                     }
-                    log.info("Read dataset uri inputs");
+                    
                     RetrieveDSRequestMessage request = new RetrieveDSRequestMessage();
                     Provenance requestProv = new Provenance();
                     requestProv.setContext(getProvenanceContext());
                     request.setProvenance(requestProv);
                     GraphManagerRetrieveInput requestInput = new GraphManagerRetrieveInput();
                     requestInput.setOutputContentType("text/turtle");
-                    requestInput.setOutputType("URI");
+                    requestInput.setOutputType(config.getOutputType());
                     requestInput.setSourceGraphs(sourceGraphs);
                     
                     RetrieveDSRequestMessage.ReplaceDSRequestPayload p = request.new ReplaceDSRequestPayload();                    
@@ -172,13 +176,13 @@ public class RetrieveDS extends AbstractDpu<RetrieveDSConfig_V1> {
                     
                     
                     String requestStr = mapper.writeValueAsString(request);
-                    log.info(requestStr);
+                    log.debug(requestStr);
                     String responseText = mq.sendSyncServiceMessage(requestStr, "attx.graphManager.inbox", 10000);
                     if (responseText == null) {
                         throw new Exception("No response from service!");
                     }
 
-                    log.info(responseText);
+                    log.debug(responseText);
                     RetriveDSResponseMessage response = mapper.readValue(responseText, RetriveDSResponseMessage.class);
                     if (!response.getPayload().getStatus().equalsIgnoreCase("success")) {
                         throw new Exception("Retrieve DS failed. " + response.getPayload().getStatusMessage());
@@ -205,17 +209,42 @@ public class RetrieveDS extends AbstractDpu<RetrieveDSConfig_V1> {
                             DataUnitUtils.generateSymbolicName(RetrieveDS.class));
 
                     rdfData.setOutput(entry);
-                    final EntityBuilder datasetUriEntity = new EntityBuilder(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/graphManager"), vf);
-                    
-                    String outputFile = response.getPayload().getGraphManagerOutput();
-                    if(!outputFile.startsWith("file://")) {
-                        outputFile = "file://" + outputFile;
-                    }
-                    String contentType = "text/turtle";
-                    datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"), vf.createURI(outputFile));
-                    datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileContentType"), vf.createLiteral(contentType));
+                    if(config.getOutputType().equals("Data")) {
+                       log.info("Adding data to local graph");
+                       String content = response.getPayload().getGraphManagerOutput();
+                        RDFParser rdfParser = Rio.createParser(RDFFormat.TURTLE);
+                        
+                        org.openrdf.model.Graph myGraph = new org.openrdf.model.impl.GraphImpl();
+                        StatementCollector collector = new StatementCollector(myGraph);
+                        rdfParser.setRDFHandler(collector);                     
+                        
+                        Reader reader = new StringReader(content);                        
+                        rdfParser.parse(reader, "http://ex.com");
+                        
+                        Iterator<Statement> si = myGraph.iterator();
+                        while(si.hasNext()) {
+                            Statement st = si.next();
+                            rdfData.add(st.getSubject(), st.getPredicate(), st.getObject());
+                        }
+                        rdfData.flushBuffer();
+//                        writeGraph(c, entry.getDataGraphURI(), System.out);
 
-                    rdfData.add(datasetUriEntity.asStatements());
+                    }
+                    else {
+
+                        final EntityBuilder datasetUriEntity = new EntityBuilder(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/graphManager"), vf);
+
+                        String outputFile = response.getPayload().getGraphManagerOutput();
+                        if(!outputFile.startsWith("file://")) {
+                            outputFile = "file://" + outputFile;
+                        }
+                        String contentType = "text/turtle";
+                        datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"), vf.createURI(outputFile));
+                        datasetUriEntity.property(vf.createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileContentType"), vf.createLiteral(contentType));
+
+                        rdfData.add(datasetUriEntity.asStatements());                           
+                    }
+
                     
 
 

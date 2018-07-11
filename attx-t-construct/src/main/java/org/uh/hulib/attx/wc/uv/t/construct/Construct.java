@@ -125,23 +125,20 @@ public class Construct extends AbstractDpu<ConstructConfig_V1> {
             uriEntries = RDFHelper.getGraphsURIArray(inputGraphURIs);
             
             if (uriEntries.length > 0) {
-                System.out.println("- conf:");
-                System.out.println(config.getConfiguration());
-
                 mq = new RabbitMQClient("messagebroker", System.getenv("MUSER"), System.getenv("MPASS"), "provenance.inbox");
                 ObjectMapper mapper = new ObjectMapper();
                 Provenance prov = getProv();
                 Map<String, Object> provPayload = new HashMap<String, Object>();
                 List<String> sourceGraphs = new ArrayList<String>();
                 try {
-                    log.info("Read data inputs");
+                    log.debug("Read data inputs");
                     prov.setInput(new ArrayList<DataProperty>());
                     int i = 0;
                     for (org.openrdf.model.URI graphURI : uriEntries) {
                         writeGraph(c, graphURI, System.out);
                         List<String> inputURIs = getAllPropertyValues(c, graphURI, DC.IDENTIFIER);
                         for(String inputURI : inputURIs) {
-                            log.info("Adding source: " + inputURI);
+                            log.debug("Adding source: " + inputURI);
                             sourceGraphs.add(inputURI);
                             
                             DataProperty input = new DataProperty();
@@ -153,7 +150,7 @@ public class Construct extends AbstractDpu<ConstructConfig_V1> {
                             
                         }
                     }
-                    log.info("Read uri inputs");
+                    log.debug("Read uri inputs");
                     ConstructRequestMessage request = new ConstructRequestMessage();
                     Provenance requestProv = new Provenance();
                     requestProv.setContext(getProvenanceContext());
@@ -171,13 +168,13 @@ public class Construct extends AbstractDpu<ConstructConfig_V1> {
                     
                     
                     String requestStr = mapper.writeValueAsString(request);
-                    log.info(requestStr);
+                    log.debug(requestStr);
                     String responseText = mq.sendSyncServiceMessage(requestStr, "attx.graphManager.inbox", 60000);
                     if (responseText == null) {
                         throw new Exception("No response from service!");
                     }
 
-                    log.info(responseText);
+                    log.debug(responseText);
                     ConstructResponseMessage response = mapper.readValue(responseText, ConstructResponseMessage.class);
 //                    if (!response.getPayload().getStatus().equals("SUCCESS")) {
   //                      throw new Exception("Transformation failed. " + response.getPayload().getStatusMessage());
@@ -196,7 +193,6 @@ public class Construct extends AbstractDpu<ConstructConfig_V1> {
                     provMsg.setProvenance(prov);
                     provMsg.setPayload(provPayload);
                     String provMessageStr = mapper.writeValueAsString(provMsg);
-                    log.info(provMessageStr);
                     mq.sendProvMessage(provMessageStr);
 
                     final ValueFactory vf = rdfData.getValueFactory();

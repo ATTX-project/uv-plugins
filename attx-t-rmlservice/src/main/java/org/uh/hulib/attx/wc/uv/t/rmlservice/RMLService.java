@@ -181,14 +181,13 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                 List<Source> files = new ArrayList<Source>();
                 try {
                     Iterator<FilesDataUnit.Entry> fileIterator = fileEntries.iterator();
-                    while (fileIterator.hasNext()) {
-                        log.info("test");
+                    while (fileIterator.hasNext()) {                        
                         Source s = new Source();
                         s.setInputType("Data");
                         s.setInput(FileUtils.readFileToString(new File(new URI(fileIterator.next().getFileURIString())), "UTF-8"));
                         files.add(s);
                     }
-                    log.info("Read data inputs");
+                    
                     for (org.openrdf.model.URI graphURI : uriEntries) {
                         String inputURI = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
                         Source s = new Source();
@@ -196,7 +195,7 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                         s.setInput(inputURI);
                         files.add(s);
                     }
-                    log.info("Read uri inputs");
+                                        
                     RMLServiceRequestMessage request = new RMLServiceRequestMessage();
                     Provenance requestProv = new Provenance();
                     requestProv.setContext(getProvenanceContext());
@@ -208,13 +207,13 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                     payload.setRMLServiceInput(requestInput);
                     request.setPayload(payload);
                     String requestStr = mapper.writeValueAsString(request);
-                    log.info(requestStr);
-                    String responseText = mq.sendSyncServiceMessage(requestStr, "rmlservice", 60000);
+                    log.debug(requestStr);
+                    String responseText = mq.sendSyncServiceMessage(requestStr, "rmlservice", 600000);
                     if (responseText == null) {
                         throw new Exception("No response from service!");
                     }
 
-                    log.info(responseText);
+                    log.debug(responseText);
                     RMLServiceResponseMessage response = mapper.readValue(responseText, RMLServiceResponseMessage.class);
                     if (!response.getPayload().getStatus().equals("success")) {
                         throw new Exception("Transformation failed. " + response.getPayload().getStatusMessage());
@@ -253,7 +252,7 @@ public class RMLService extends AbstractDpu<RMLServiceConfig_V1> {
                     provMsg.setPayload(provPayload);
                     addInputs(c, provMsg, uriEntries, fileEntries);
                     String provStepMessage = mapper.writeValueAsString(provMsg);
-                    log.info(provStepMessage);
+                    log.debug(provStepMessage);
                     mq.sendProvMessage(provStepMessage);
 
 

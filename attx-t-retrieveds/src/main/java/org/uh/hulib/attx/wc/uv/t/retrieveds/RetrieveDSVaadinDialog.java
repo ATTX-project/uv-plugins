@@ -7,6 +7,7 @@ package org.uh.hulib.attx.wc.uv.t.retrieveds;
 
 import com.vaadin.data.util.ObjectProperty;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.NativeSelect;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.VerticalLayout;
 
@@ -20,7 +21,7 @@ import eu.unifiedviews.helpers.dpu.vaadin.dialog.AbstractDialog;
  */
 public class RetrieveDSVaadinDialog extends AbstractDialog<RetrieveDSConfig_V1> {
 
-    private ObjectProperty<String> configuration = new ObjectProperty<String>("");
+     private NativeSelect select = new NativeSelect();
 
     public RetrieveDSVaadinDialog() {
         super(RetrieveDS.class);
@@ -28,13 +29,13 @@ public class RetrieveDSVaadinDialog extends AbstractDialog<RetrieveDSConfig_V1> 
 
     @Override
     public void setConfiguration(RetrieveDSConfig_V1 c) throws DPUConfigException {
-        this.configuration.setValue(c.getConfiguration());
+        this.select.setValue(c.getOutputType());
     }
 
     @Override
     public RetrieveDSConfig_V1 getConfiguration() throws DPUConfigException {
         final RetrieveDSConfig_V1 c = new RetrieveDSConfig_V1();
-        c.setConfiguration(this.configuration.getValue());
+        c.setOutputType(this.select.getValue().toString());
         return c;
     }
 
@@ -45,11 +46,12 @@ public class RetrieveDSVaadinDialog extends AbstractDialog<RetrieveDSConfig_V1> 
         mainLayout.setHeight("-1px");
         mainLayout.setMargin(true);
 
-        final TextArea config = new TextArea(this.configuration);
-        config.setCaption("RML configuration");
-        config.setRows(40);
-        config.setWidth("100%");
-        mainLayout.addComponent(config);
+        select.setCaption("Output type");        
+        select.addItem("URI");
+        select.addItem("Data");
+        select.setValue("URI");        
+        select.setRequired(true);        
+        mainLayout.addComponent(select);
 
         setCompositionRoot(mainLayout);
     }
