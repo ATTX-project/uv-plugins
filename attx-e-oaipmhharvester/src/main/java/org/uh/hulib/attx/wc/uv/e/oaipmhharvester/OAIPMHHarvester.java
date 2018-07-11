@@ -80,7 +80,7 @@ public class OAIPMHHarvester extends AbstractDpu<OAIPMHHarvesterConfig_V1> {
 
         final RDFWriter writer = Rio.createWriter(RDFFormat.TURTLE, out);
         writer.startRDF();
-        System.out.println("Graph:" + graph.toString());
+        
         RepositoryResult<Statement> r = conn.getStatements(null, null, null, false, graph);
         if (r.hasNext()) {
             Statement stmt = null;
@@ -109,7 +109,7 @@ public class OAIPMHHarvester extends AbstractDpu<OAIPMHHarvesterConfig_V1> {
             if(singleSet.startsWith("filter:") && graphs.length > 0) {
                 RepositoryConnection c = queryGraphs.getConnection();
                 // get the sets from the query graphs using the filter property
-                log.info(singleSet.substring(7));
+                
                 org.openrdf.model.URI propertyURI = c.getValueFactory().createURI(singleSet.substring(7));
                 final ValueFactory vf = c.getValueFactory();
                 for(int i = 0; i < graphs.length; i++) {                
@@ -117,7 +117,7 @@ public class OAIPMHHarvester extends AbstractDpu<OAIPMHHarvesterConfig_V1> {
                     writeGraph(c, g, System.out);
                     sets = getAllPropertyValues(c, g, propertyURI);                
                 }
-                log.info("size: " + sets.size());
+                
                 c.close();
             }
             else {
@@ -149,13 +149,13 @@ public class OAIPMHHarvester extends AbstractDpu<OAIPMHHarvesterConfig_V1> {
                 while (listRecords != null) {
                     NodeList errors = listRecords.getErrors();
                     if (errors != null && errors.getLength() > 0) {
-                        System.out.println("Found errors");
+                        log.error("Found errors");
                         int length = errors.getLength();
                         for (int i=0; i<length; ++i) {
                             Node item = errors.item(i);
                             System.out.println(item);
                         }
-                        System.out.println("Error record: " + listRecords.toString());
+                        log.error("Error record: " + listRecords.toString());
                         break;
                     }
                     
@@ -165,7 +165,6 @@ public class OAIPMHHarvester extends AbstractDpu<OAIPMHHarvesterConfig_V1> {
                     FileUtils.write(outputFile,listRecords.toString() , true);
 
                     String resumptionToken = listRecords.getResumptionToken();
-                    System.out.println("resumptionToken: " + resumptionToken);
                     if (resumptionToken == null || resumptionToken.length() == 0) {
                         listRecords = null;
                     } else {
