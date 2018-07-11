@@ -150,7 +150,7 @@ public class OntologyService extends AbstractDpu<OntologyServiceConfig_V1> {
                         //writeGraph(c, graphURI, System.out);
                         // check for file URI
                         String inputURI = getSinglePropertyValue(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
-                        System.out.println(inputURI);                        
+                                             
                         if (inputURI != null) {                            
                             s.setDataGraph(inputURI);
                         }
@@ -165,7 +165,6 @@ public class OntologyService extends AbstractDpu<OntologyServiceConfig_V1> {
                     s.setSchemaGraph(config.getConfiguration());
                     input.setActivity("infer");
                     input.setSourceData(s);
-                    log.info("Read data inputs");
 
                     OntologyServiceRequestMessage request = new OntologyServiceRequestMessage();
                     request.setProvenance(requestProv);
@@ -176,7 +175,7 @@ public class OntologyService extends AbstractDpu<OntologyServiceConfig_V1> {
                     request.setPayload(p);
                     
                     String requestStr = mapper.writeValueAsString(request);
-                    log.info("Read data inputs");
+                    
                     String responseText = mq.sendSyncServiceMessage(requestStr, "attx.ontology.inbox", 600000);
                     if (responseText == null) {
                         throw new Exception("No response from service!");
@@ -222,7 +221,7 @@ public class OntologyService extends AbstractDpu<OntologyServiceConfig_V1> {
                     provMsg.setProvenance(prov);
                     provMsg.setPayload(provPayload);
                     String provMsgStr = mapper.writeValueAsString(provMsg);
-                    log.info(provMsgStr);
+                    
                     mq.sendProvMessage(provMsgStr);
 
                 } catch (Exception ex) {

@@ -129,9 +129,6 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
             }
             
             if (fileEntries.size() > 0 || uriEntries.length > 0) {
-                System.out.println("- conf:");
-                System.out.println(config.getConfiguration());
-                System.out.println("URIs:" + uriEntries.length);
                 mq = new RabbitMQClient("messagebroker", System.getenv("MUSER"), System.getenv("MPASS"), "provenance.inbox");
                 ObjectMapper mapper = new ObjectMapper();
                 Provenance prov = getProv();
@@ -153,7 +150,6 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
                         files.add(s);                                                
                         
                     }
-                    log.info("Read data inputs");
                     for (org.openrdf.model.URI graphURI : uriEntries) {
                         List<String> inputURIs = getAllPropertyValues(c, graphURI, DC.IDENTIFIER);
                         for(String inputURI : inputURIs) {
@@ -173,8 +169,7 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
                             i++;
                         }
                         
-                    }
-                    log.info("Read uri inputs");
+                    }                    
                     FramingRequestMessage request = new FramingRequestMessage();
                     request.setProvenance(requestProv);
                     FramingServiceInput requestInput = new FramingServiceInput();
@@ -189,13 +184,13 @@ public class FramingService extends AbstractDpu<FramingServiceConfig_V1> {
                     request.setPayload(p);
                     
                     String requestStr = mapper.writeValueAsString(request);
-                    log.info(requestStr);
+                    log.debug(requestStr);
                     String responseText = mq.sendSyncServiceMessage(requestStr, "attx.ldframe.inbox", 600000);
                     if (responseText == null) {
                         throw new Exception("No response from service!");
                     }
 
-                    log.info(responseText);
+                    log.debug(responseText);
                     FramingResponseMessage response = mapper.readValue(responseText, FramingResponseMessage.class);
                     
                     

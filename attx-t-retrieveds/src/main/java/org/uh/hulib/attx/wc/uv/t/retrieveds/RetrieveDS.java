@@ -102,8 +102,7 @@ public class RetrieveDS extends AbstractDpu<RetrieveDSConfig_V1> {
     private void writeGraph(RepositoryConnection conn, org.openrdf.model.URI graph, OutputStream out) throws Exception {
 
         final RDFWriter writer = Rio.createWriter(RDFFormat.TURTLE, out);
-        writer.startRDF();
-        System.out.println("Graph:" + graph.toString());
+        writer.startRDF();        
         RepositoryResult<Statement> r = conn.getStatements(null, null, null, false, graph);
         if (r.hasNext()) {
             Statement stmt = null;
@@ -143,13 +142,13 @@ public class RetrieveDS extends AbstractDpu<RetrieveDSConfig_V1> {
                 List<String> sourceGraphs = new ArrayList<String>();
                 int i = 0;
                 try {
-                    log.info("Read data inputs");
+                    
                     prov.setInput(new ArrayList<DataProperty>());
                     for (org.openrdf.model.URI graphURI : dataSetURIEntries) {
-                        writeGraph(c, graphURI, System.out);
+                        //writeGraph(c, graphURI, System.out);
                         List<String> inputURIs = getAllPropertyValues(c, graphURI, DC.IDENTIFIER);
                         for(String inputURI : inputURIs) {
-                            log.info("Adding source: " + inputURI);
+                            log.debug("Adding source: " + inputURI);
                             sourceGraphs.add(inputURI);
                             
                             DataProperty input = new DataProperty();
@@ -161,7 +160,7 @@ public class RetrieveDS extends AbstractDpu<RetrieveDSConfig_V1> {
                             
                         }
                     }
-                    log.info("Read dataset uri inputs");
+                    
                     RetrieveDSRequestMessage request = new RetrieveDSRequestMessage();
                     Provenance requestProv = new Provenance();
                     requestProv.setContext(getProvenanceContext());
@@ -177,13 +176,13 @@ public class RetrieveDS extends AbstractDpu<RetrieveDSConfig_V1> {
                     
                     
                     String requestStr = mapper.writeValueAsString(request);
-                    log.info(requestStr);
+                    log.debug(requestStr);
                     String responseText = mq.sendSyncServiceMessage(requestStr, "attx.graphManager.inbox", 10000);
                     if (responseText == null) {
                         throw new Exception("No response from service!");
                     }
 
-                    log.info(responseText);
+                    log.debug(responseText);
                     RetriveDSResponseMessage response = mapper.readValue(responseText, RetriveDSResponseMessage.class);
                     if (!response.getPayload().getStatus().equalsIgnoreCase("success")) {
                         throw new Exception("Retrieve DS failed. " + response.getPayload().getStatusMessage());

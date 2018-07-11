@@ -120,7 +120,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             // just using the first one for now!
             URI g = outputGraphsMetadata[0];
             
-            writeGraph(c, g, System.out);
+            //writeGraph(c, g, System.out);
             
             String targetGraph = getOutputGraphURI();
 
@@ -198,7 +198,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
             // just using the first one for now!
             URI g = outputGraphsMetadata[0];
             
-            writeGraph(c, g, System.out);
+            //writeGraph(c, g, System.out);
             
             String targetGraph = getOutputGraphURI();
             String targetGraphTitle = getSinglePropertyValue(c, g, DC.TITLE);
@@ -348,7 +348,7 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                     graphManagerInput.setSourceData(new ArrayList());
 
                     for (URI graphURI : uriEntries) {
-                        writeGraph(c, graphURI, System.out);
+                        //writeGraph(c, graphURI, System.out);
                         // check for file URI
                         List<String> inputURIs = getAllPropertyValues(c, graphURI, c.getValueFactory().createURI("http://hulib.helsinki.fi/attx/uv/dpu/fileURI"));
                         for(String inputURI : inputURIs) {
@@ -370,7 +370,8 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
                     }
                     for (FilesDataUnit.Entry entry : fileEntries) {
                         Source s = new Source();
-                        s.setContentType("text/turtle");
+                        //s.setContentType("text/turtle");
+                        s.setContentType("application/rdf+xml");
                         s.setInputType("Data");
                         s.setInput(FileUtils.readFileToString(new File(new java.net.URI(entry.getFileURIString())), "UTF-8"));
                         System.out.println("Data");
@@ -394,6 +395,9 @@ public class ReplaceDS extends AbstractDpu<ReplaceDSConfig_V1> {
 
                     //TODO: get the status from response
                     ReplaceDSResponseMessage response = mapper.readValue(responseStr, ReplaceDSResponseMessage.class);                    
+                    if(!response.getPayload().getStatus().equals("success")) {
+                        throw new Exception(response.getPayload().getStatusMessage());
+                    }
                     String provStepMessage = mapper.writeValueAsString(provMessageStep);
                     log.info(provStepMessage);
                     mq.sendProvMessage(provStepMessage);
